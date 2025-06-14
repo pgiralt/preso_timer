@@ -1,0 +1,30 @@
+# Sample Presentation Timer Configuration
+# This is a sample YAML configuration file for the Presentation Timer
+
+# Optional: Presentation title (displayed in the UI)
+title: "My Awesome Presentation"
+
+# Optional: Start time in 24-hour format (HH:MM:SS)
+# If not specified, the presentation will start immediately when loaded
+# Example: "14:30:00" for 2:30 PM
+start_time: "09:00:00"
+
+# Required: List of presentation sections
+sections:
+  # Each section must have:
+  # - name: Display name of the section (string)
+  # - duration: Length of the section in minutes (number)
+  - name: "Introduction"
+    duration: 5
+    
+  - name: "Main Topic 1"
+    duration: 10
+    
+  - name: "Main Topic 2"
+    duration: 15
+    
+  - name: "Q&A"
+    duration: 10
+    
+  - name: "Conclusion"
+    duration: 5

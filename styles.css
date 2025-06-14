@@ -518,3 +518,45 @@ h1 {
 #now-button:active {
     background-color: #dee2e6;
 }
+
+/* No sections message */
+.no-sections {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+    line-height: 1.6;
+}
+
+.no-sections p {
+    margin: 0.5rem 0;
+}
+
+.no-sections .download-link {
+    color: #2196F3;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.no-sections .download-link:hover {
+    color: #0b7dda;
+    text-decoration: underline;
+}
+
+.no-sections {
+    font-size: 1.2em;
+    background-color: #f9f9f9;
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    margin: 20px 0;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.no-sections:before {
+    content: '📋';
+    display: block;
+    font-size: 3em;
+    margin-bottom: 15px;
+}

@@ -133,100 +133,127 @@ function formatDuration(duration) {
 }
 
 /**
- * Loads presentation data from YAML file
- * @returns {Promise<Object>} - Parsed presentation data
+ * Parses YAML text into presentation data object with validation
+ * @param {string} yamlText - Raw YAML text to parse
+ * @returns {Object} - Parsed and validated presentation data
+ * @throws {Error} If the YAML data is invalid or missing required fields
+ */
+function parseYAMLData(yamlText) {
+    // Parse YAML using our simple parser
+    const lines = yamlText.split('\n');
+    const data = { title: "", sections: [] };
+    let inSections = false;
+    
+    // Parse the YAML content
+    lines.forEach((line, index) => {
+        const originalLine = line;
+        line = line.trim();
+        console.log(`Line ${index}: "${originalLine}" -> "${line}"`);
+        
+        if (line === '' || line.startsWith('#')) return;
+        
+        if (line.startsWith('title:')) {
+            data.title = line.substring(6).trim().replace(/['"]+/g, '');
+            console.log('Parsed title:', data.title);
+        } else if (line.startsWith('start_time:')) {
+            data.start_time = line.substring(11).trim().replace(/['"]+/g, '');
+            console.log('Parsed start time:', data.start_time);
+        } else if (line === 'sections:') {
+            inSections = true;
+            console.log('Found sections');
+        } else if (inSections && line.startsWith('- name:')) {
+            const name = line.substring(7).trim().replace(/['"]+/g, '');
+            const section = { name: name };
+            data.sections.push(section);
+            console.log('Added section:', name);
+        } else if (inSections && data.sections.length > 0) {
+            const lastSection = data.sections[data.sections.length - 1];
+            if (line.startsWith('duration:')) {
+                const duration = parseInt(line.substring(9).trim());
+                lastSection.duration = duration;
+                console.log(`Set duration for ${lastSection.name}:`, duration, 'minutes');
+            }
+        }
+    });
+
+    console.log('Parsed YAML data:', data);
+
+    // Set default values if missing
+    if (!data.title) {
+        console.log('No title found in YAML, using default');
+        data.title = 'Presentation Timer';
+    }
+    if (!data.start_time) {
+        console.log('No start_time found in YAML, using current time');
+        const now = new Date();
+        data.start_time = formatTime(now);
+    }
+    if (data.sections.length === 0) {
+        throw new Error('No sections found in YAML file');
+    }
+
+    // Validate sections and calculate times
+    let currentTime = parseTime(data.start_time);
+    
+    data.sections.forEach((section, index) => {
+        if (!section.name) {
+            throw new Error(`Section ${index} missing name`);
+        }
+        if (typeof section.duration === 'undefined') {
+            throw new Error(`Section "${section.name}" missing duration`);
+        }
+        
+        // Set start time
+        section.start = formatTime(currentTime);
+        
+        // Calculate end time by adding duration in minutes
+        const endTime = parseTime(formatTime(currentTime), currentTime);
+        endTime.setMinutes(endTime.getMinutes() + section.duration);
+        section.end = formatTime(endTime);
+        
+        console.log(`Calculated times for ${section.name}: ${section.start} - ${section.end} (${section.duration} min)`);
+        
+        // Move current time to end of this section for next section's start
+        currentTime = endTime;
+    });
+
+    return data;
+}
+
+/**
+ * Loads presentation data from YAML file or returns default data if not available
+ * @returns {Promise<Object>} - Parsed and validated presentation data or default data
  */
 async function loadPresentationData() {
     try {
         console.log('Loading YAML file...');
         const response = await fetch('presentation_times.yaml');
         if (!response.ok) {
+            if (response.status === 404) {
+                console.log('YAML file not found, using default data');
+                return {
+                    title: 'Presentation Timer',
+                    start_time: formatTime(new Date()),
+                    sections: []
+                };
+            }
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const text = await response.text();
-        console.log('YAML content loaded:', text);
+        console.log('YAML content loaded');
         
-        // Parse YAML using our simple parser
-        const lines = text.split('\n');
-        const data = { title: "", sections: [] };
-        let inSections = false;
-        
-        lines.forEach((line, index) => {
-            const originalLine = line;
-            line = line.trim();
-            console.log(`Line ${index}: "${originalLine}" -> "${line}"`);
-            
-            if (line === '' || line.startsWith('#')) return;
-            
-            if (line.startsWith('title:')) {
-                data.title = line.substring(6).trim().replace(/['"]+/g, '');
-                console.log('Parsed title:', data.title);
-            } else if (line.startsWith('start_time:')) {
-                data.start_time = line.substring(11).trim().replace(/['"]+/g, '');
-                console.log('Parsed start time:', data.start_time);
-            } else if (line === 'sections:') {
-                inSections = true;
-                console.log('Found sections');
-            } else if (inSections && line.startsWith('- name:')) {
-                const name = line.substring(7).trim().replace(/['"]+/g, '');
-                const section = { name: name };
-                data.sections.push(section);
-                console.log('Added section:', name);
-            } else if (inSections && data.sections.length > 0) {
-                const lastSection = data.sections[data.sections.length - 1];
-                if (line.startsWith('duration:')) {
-                    const duration = parseInt(line.substring(9).trim());
-                    lastSection.duration = duration;
-                    console.log(`Set duration for ${lastSection.name}:`, duration, 'minutes');
-                }
-            }
-        });
-
-        console.log('Final parsed data:', data);
-
-        // Validate data
-        if (!data.title) {
-            throw new Error('Missing title in YAML file');
-        }
-        if (!data.start_time) {
-            throw new Error('Missing start_time in YAML file');
-        }
-        if (data.sections.length === 0) {
-            throw new Error('No sections found in YAML file');
-        }
-
-        // Calculate start and end times for each section
-        let currentTime = parseTime(data.start_time);
-        
-        data.sections.forEach((section, index) => {
-            if (!section.name) {
-                throw new Error(`Section ${index} missing name`);
-            }
-            if (!section.duration) {
-                throw new Error(`Section "${section.name}" missing duration`);
-            }
-            
-            // Set start time
-            section.start = formatTime(currentTime);
-            
-            // Calculate end time by adding duration in minutes
-            const endTime = parseTime(formatTime(currentTime), currentTime);
-            endTime.setMinutes(endTime.getMinutes() + section.duration);
-            section.end = formatTime(endTime);
-            
-            console.log(`Calculated times for ${section.name}: ${section.start} - ${section.end} (${section.duration} min)`);
-            
-            // Move current time to end of this section for next section's start
-            currentTime = endTime;
-        });
-
-        return data;
+        // Parse and validate the YAML data
+        return parseYAMLData(text);
     } catch (error) {
         console.error('Error loading YAML file:', error);
-        console.error('Error details:', {
-            message: error.message,
-            stack: error.stack
-        });
+        if (error.message.includes('Failed to fetch')) {
+            console.log('Using default data due to fetch error');
+            return {
+                title: 'Presentation Timer',
+                start_time: formatTime(new Date()),
+                sections: []
+            };
+        }
         throw new Error(`Failed to load presentation data: ${error.message}`);
     }
 }
@@ -408,14 +435,43 @@ function updateDisplay() {
         }
 
         const currentTime = new Date();
-        const currentSection = getCurrentSection(currentTime);
         
         // Update current time display
         const currentTimeElement = document.getElementById('current-time');
         if (currentTimeElement) {
             currentTimeElement.textContent = formatTimeDisplay(currentTime);
         }
-    
+        
+        // Check if we have any sections
+        if (!presentationData.sections || presentationData.sections.length === 0) {
+            const currentSectionNameElement = document.getElementById('current-section-name');
+            const timeRemainingElement = document.getElementById('time-remaining');
+            
+            if (currentSectionNameElement) {
+                currentSectionNameElement.textContent = 'No presentation data loaded';
+                currentSectionNameElement.className = '';
+            }
+            
+            if (timeRemainingElement) {
+                timeRemainingElement.textContent = '00:00';
+                timeRemainingElement.className = '';
+            }
+            
+            // Clear the timeline
+            const timeline = document.getElementById('timeline');
+            if (timeline) {
+                timeline.innerHTML = `
+                    <div class="no-sections">
+                        <p>No timer configuration found. Please import a configuration file using the "Import Settings" button. </p>
+                        <p>Or <a href="sample-config.yaml" download="presentation-timer-config.yaml" class="download-link">download a sample configuration file</a> to get started.</p>
+                    </div>`;
+            }
+            
+            return;
+        }
+        
+        const currentSection = getCurrentSection(currentTime);
+        
         // Update current section name and timer
         const currentSectionNameElement = document.getElementById('current-section-name');
         const currentSectionDurationElement = document.getElementById('current-section-duration');
@@ -729,59 +785,102 @@ function validateAndProcessYAML(data) {
  * @param {File} file - Selected YAML file
  */
 function importYAMLFile(file) {
-    try {
-        console.log('Importing YAML file:', file.name);
-        
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            try {
-                // Parse YAML content
-                const yamlContent = event.target.result;
-                const parsedData = jsyaml.load(yamlContent) || {};
-                
-                // Validate and process the data
-                const validatedData = validateAndProcessYAML(parsedData);
-                
-                // Update the application with the new data
-                presentationData = validatedData;
-                
-                // Update the title
-                const titleElement = document.getElementById('title');
-                if (titleElement) {
-                    titleElement.textContent = validatedData.title;
-                }
-                
-                // Calculate section times
-                recalculateTimesFromStart(validatedData.start_time);
-                
-                // Update the start time input
-                const startTimeInput = document.getElementById('start-time-input');
-                if (startTimeInput) {
-                    startTimeInput.value = validatedData.start_time;
-                }
-                
-                // Update the display
-                updateDisplay();
-                
-                console.log('YAML file imported successfully');
-                alert(`Successfully imported "${file.name}"!\n\nTitle: ${validatedData.title}\nSections: ${validatedData.sections.length}\nStart Time: ${formatTimeDisplay(parseTime(validatedData.start_time))}`);
-                
-            } catch (error) {
-                console.error('Error processing YAML file:', error);
-                alert(`Error importing YAML file:\n\n${error.message}\n\nPlease ensure your YAML file has the required format with at least one section containing 'name' and 'duration' fields.`);
+    const reader = new FileReader();
+    
+    reader.onload = async function(e) {
+        try {
+            const yamlText = e.target.result;
+            // Parse the YAML data
+            const newData = parseYAMLData(yamlText);
+            
+            // Update the presentation data
+            presentationData = newData;
+            
+            // Update the title if it exists
+            const titleElement = document.getElementById('title');
+            if (titleElement && presentationData.title) {
+                titleElement.textContent = presentationData.title;
             }
-        };
-        
-        reader.onerror = function() {
-            console.error('Error reading file:', reader.error);
-            alert('Error reading the selected file. Please try again.');
-        };
-        
-        reader.readAsText(file);
-        
-    } catch (error) {
-        console.error('Error in importYAMLFile:', error);
-        alert('An unexpected error occurred while importing the file.');
+            
+            // Update the start time input if it exists
+            const startTimeInput = document.getElementById('start-time-input');
+            if (startTimeInput && presentationData.start_time) {
+                startTimeInput.value = presentationData.start_time;
+            }
+            
+            // Recalculate times and update display
+            recalculateTimesFromStart(presentationData.start_time);
+            updateDisplay();
+            
+            console.log('Successfully imported YAML file:', file.name);
+        } catch (error) {
+            console.error('Error importing YAML file:', error);
+            alert(`Error importing YAML file: ${error.message}`);
+        }
+    };
+    
+    reader.onerror = function() {
+        console.error('Error reading file');
+        alert('Error reading the file. Please try again.');
+    };
+    
+    reader.readAsText(file);
+}
+
+// Function to setup event listeners
+function setupEventListeners() {
+    // Set up time adjustment buttons
+    const plusButton = document.getElementById('time-plus');
+    const minusButton = document.getElementById('time-minus');
+    const nowButton = document.getElementById('now-button');
+    const importButton = document.getElementById('import-button');
+    const fileInput = document.getElementById('yaml-file-input');
+    const startTimeInput = document.getElementById('start-time-input');
+
+    // Plus/minus buttons for time adjustment
+    if (plusButton) {
+        plusButton.addEventListener('click', () => adjustTimes(1));
+    }
+    if (minusButton) {
+        minusButton.addEventListener('click', () => adjustTimes(-1));
+    }
+    
+    // Now button to set current time
+    if (nowButton) {
+        nowButton.addEventListener('click', function() {
+            const currentTime = new Date();
+            const currentTimeString = formatTime(currentTime);
+            
+            // Update the input field
+            if (startTimeInput) {
+                startTimeInput.value = currentTimeString;
+            }
+            
+            // Recalculate all section times
+            recalculateTimesFromStart(currentTimeString);
+            updateDisplay();
+        });
+    }
+    
+    // Setup import button
+    if (importButton) {
+        importButton.addEventListener('click', () => {
+            if (fileInput) {
+                fileInput.click();
+            }
+        });
+    }
+    
+    // Setup file input change handler
+    if (fileInput) {
+        fileInput.addEventListener('change', function(event) {
+            const selectedFile = event.target.files[0];
+            if (selectedFile) {
+                importYAMLFile(selectedFile);
+                // Clear the input so the same file can be selected again
+                event.target.value = '';
+            }
+        });
     }
 }
 
@@ -799,63 +898,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Initialize start time input
         const startTimeInput = document.getElementById('start-time-input');
-        if (startTimeInput && presentationData.start_time) {
-            startTimeInput.value = presentationData.start_time;
-        }
-        
-        // Start updating display
-        updateDisplay();
-        setInterval(updateDisplay, 1000);
-        
-        // Set up event listeners
-        const plusButton = document.getElementById('time-plus');
-        const minusButton = document.getElementById('time-minus');
-        const nowButton = document.getElementById('now-button');
-        const importButton = document.getElementById('import-button');
-
-        if (plusButton) {
-            plusButton.addEventListener('click', () => adjustTimes(1));
-        }
-        if (minusButton) {
-            minusButton.addEventListener('click', () => adjustTimes(-1));
-        }
-        if (nowButton) {
-            nowButton.addEventListener('click', function() {
-                const currentTime = new Date();
-                const currentTimeString = formatTime(currentTime);
-                
-                // Update the input field
-                if (startTimeInput) {
-                    startTimeInput.value = currentTimeString;
-                }
-                
-                // Recalculate all section times
-                recalculateTimesFromStart(currentTimeString);
-                updateDisplay();
-                
-                console.log('Start time set to current time:', currentTimeString);
-            });
-        }
-        if (importButton) {
-            importButton.addEventListener('click', function() {
-                const fileInput = document.getElementById('yaml-file-input');
-                if (fileInput) {
-                    fileInput.click();
-                }
-            });
-        }
-        const fileInput = document.getElementById('yaml-file-input');
-        if (fileInput) {
-            fileInput.addEventListener('change', function(event) {
-                const selectedFile = event.target.files[0];
-                if (selectedFile) {
-                    importYAMLFile(selectedFile);
-                    // Clear the input so the same file can be selected again
-                    event.target.value = '';
-                }
-            });
-        }
         if (startTimeInput) {
+            startTimeInput.value = presentationData.start_time || formatTime(new Date());
+            
+            // Add change and input handlers for start time
             startTimeInput.addEventListener('change', (event) => {
                 let newStartTime = event.target.value;
                 console.log('Start time input changed to:', newStartTime);
@@ -886,6 +932,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
         }
+        
+        // Setup all event listeners
+        setupEventListeners();
+        
+        // Start updating display
+        updateDisplay();
+        setInterval(updateDisplay, 1000);
     } catch (error) {
         console.error('Error initializing presentation timer:', error);
         console.error('Full error details:', error);
