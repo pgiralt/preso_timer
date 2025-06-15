@@ -307,81 +307,159 @@ function updateTimelineDisplay() {
     try {
         const currentTime = new Date();
         const timeline = document.getElementById('timeline');
-        if (timeline && presentationData) {
-            timeline.innerHTML = '';
+        if (!timeline || !presentationData) return;
 
-            // Get current section to highlight it
-            const currentSection = getCurrentSection(currentTime);
-            const currentSectionName = currentSection ? currentSection.name : null;
+        // Get current section to highlight it
+        const currentSection = getCurrentSection(currentTime);
+        const currentSectionName = currentSection ? currentSection.name : null;
+        
+        // Check if we need to update the timeline at all
+        const existingItems = timeline.querySelectorAll('.timeline-item');
+        const needsFullRebuild = existingItems.length !== presentationData.sections.length;
+        
+        // Track which input has focus (if any)
+        const focusedInput = document.activeElement;
+        let focusedIndex = -1;
+        let focusedValue = '';
+        
+        if (focusedInput && focusedInput.classList.contains('duration-input')) {
+            focusedIndex = parseInt(focusedInput.closest('.timeline-item').id.replace('section-', ''));
+            focusedValue = focusedInput.value;
+        }
+        
+        // Only rebuild if necessary
+        if (needsFullRebuild) {
+            timeline.innerHTML = '';
             
             presentationData.sections.forEach((section, index) => {
-                try {
-                    // Use the presentation start time as reference for day rollover detection
-                    const presentationStartTime = parseTime(presentationData.start_time);
-                    const startTime = parseTime(section.start, presentationStartTime);
-                    const endTime = parseTime(section.end, startTime);
-                    const status = getTimeStatus(currentTime, startTime, endTime);
-                    
-                    const item = document.createElement('div');
-                    item.className = 'timeline-item';
-                    item.id = `section-${index}`;
-                    
-                    // Highlight current section
-                    if (section.name === currentSectionName) {
-                        item.classList.add('current-section');
-                    }
-                    
-                    // Section name (left column)
-                    const sectionName = document.createElement('div');
-                    sectionName.className = 'section-name';
-                    sectionName.textContent = section.name;
-                    
-                    // Duration input (middle column)
-                    const durationContainer = document.createElement('div');
-                    durationContainer.className = 'duration-container';
-                    
-                    const durationInput = document.createElement('input');
-                    durationInput.type = 'number';
-                    durationInput.className = 'duration-input';
-                    durationInput.value = section.duration;
-                    durationInput.min = '1';
-                    durationInput.max = '999';
-                    durationInput.addEventListener('change', (event) => {
-                        updateSectionDuration(index, parseInt(event.target.value));
-                    });
-                    
-                    const durationLabel = document.createElement('span');
-                    durationLabel.className = 'duration-label';
-                    durationLabel.textContent = ' min';
-                    
-                    durationContainer.appendChild(durationInput);
-                    durationContainer.appendChild(durationLabel);
-                    
-                    // Time range (right column)
-                    const timeBox = document.createElement('div');
-                    timeBox.className = `time-box ${status}`;
-                    timeBox.textContent = `${formatTimeDisplay(startTime)} - ${formatTimeDisplay(endTime)}`;
-                    
-                    // Add all three columns to the item
-                    item.appendChild(sectionName);
-                    item.appendChild(durationContainer);
-                    item.appendChild(timeBox);
-                    
-                    timeline.appendChild(item);
-                } catch (error) {
-                    console.error('Error updating timeline item:', error);
-                }
+                createTimelineItem(section, index, currentSectionName, currentTime);
             });
-            
-            // Auto-scroll to current section if it changed
-            if (currentSectionName !== previousSectionName) {
-                console.log('Section changed from', previousSectionName, 'to', currentSectionName);
-                scrollToCurrentSection(currentSectionName);
-                previousSectionName = currentSectionName;
+        } else {
+            // Just update the existing items
+            presentationData.sections.forEach((section, index) => {
+                updateTimelineItem(section, index, currentSectionName, currentTime, timeline);
+            });
+        }
+        
+        // Restore focus if needed
+        if (focusedIndex >= 0 && focusedIndex < presentationData.sections.length) {
+            const input = document.querySelector(`#section-${focusedIndex} .duration-input`);
+            if (input) {
+                input.focus();
+                if (input.value !== focusedValue) {
+                    input.value = focusedValue;
+                }
             }
+        }
+        
+        // Auto-scroll to current section if it changed
+        if (currentSectionName !== previousSectionName) {
+            console.log('Section changed from', previousSectionName, 'to', currentSectionName);
+            scrollToCurrentSection(currentSectionName);
+            previousSectionName = currentSectionName;
         }
     } catch (error) {
         console.error('Error updating timeline display:', error);
+    }
+}
+
+/**
+ * Creates a new timeline item
+ */
+function createTimelineItem(section, index, currentSectionName, currentTime) {
+    try {
+        const timeline = document.getElementById('timeline');
+        if (!timeline) return;
+        
+        // Use the presentation start time as reference for day rollover detection
+        const presentationStartTime = parseTime(presentationData.start_time);
+        const startTime = parseTime(section.start, presentationStartTime);
+        const endTime = parseTime(section.end, startTime);
+        const status = getTimeStatus(currentTime, startTime, endTime);
+        
+        const item = document.createElement('div');
+        item.className = 'timeline-item';
+        item.id = `section-${index}`;
+        
+        // Highlight current section
+        if (section.name === currentSectionName) {
+            item.classList.add('current-section');
+        }
+        
+        // Section name (left column)
+        const sectionName = document.createElement('div');
+        sectionName.className = 'section-name';
+        sectionName.textContent = section.name;
+        
+        // Duration input (middle column)
+        const durationContainer = document.createElement('div');
+        durationContainer.className = 'duration-container';
+        
+        const durationInput = document.createElement('input');
+        durationInput.type = 'number';
+        durationInput.className = 'duration-input';
+        durationInput.value = section.duration;
+        durationInput.min = '1';
+        durationInput.max = '999';
+        durationInput.dataset.index = index;
+        durationInput.addEventListener('change', (event) => {
+            updateSectionDuration(parseInt(event.target.dataset.index), parseInt(event.target.value));
+        });
+        
+        const durationLabel = document.createElement('span');
+        durationLabel.className = 'duration-label';
+        durationLabel.textContent = ' min';
+        
+        durationContainer.appendChild(durationInput);
+        durationContainer.appendChild(durationLabel);
+        
+        // Time range (right column)
+        const timeBox = document.createElement('div');
+        timeBox.className = `time-box ${status}`;
+        timeBox.textContent = `${formatTimeDisplay(startTime)} - ${formatTimeDisplay(endTime)}`;
+        
+        // Add all three columns to the item
+        item.appendChild(sectionName);
+        item.appendChild(durationContainer);
+        item.appendChild(timeBox);
+        
+        timeline.appendChild(item);
+    } catch (error) {
+        console.error('Error creating timeline item:', error);
+    }
+}
+
+/**
+ * Updates an existing timeline item
+ */
+function updateTimelineItem(section, index, currentSectionName, currentTime, timeline) {
+    try {
+        const item = document.getElementById(`section-${index}`);
+        if (!item) {
+            createTimelineItem(section, index, currentSectionName, currentTime);
+            return;
+        }
+        
+        // Update current section highlighting
+        if (section.name === currentSectionName) {
+            item.classList.add('current-section');
+        } else {
+            item.classList.remove('current-section');
+        }
+        
+        // Only update the time box if needed (skip the input to preserve focus)
+        const timeBox = item.querySelector('.time-box');
+        if (timeBox) {
+            const presentationStartTime = parseTime(presentationData.start_time);
+            const startTime = parseTime(section.start, presentationStartTime);
+            const endTime = parseTime(section.end, startTime);
+            const status = getTimeStatus(currentTime, startTime, endTime);
+            
+            timeBox.className = `time-box ${status}`;
+            timeBox.textContent = `${formatTimeDisplay(startTime)} - ${formatTimeDisplay(endTime)}`;
+        }
+    } catch (error) {
+        console.error('Error updating timeline item:', error);
     }
 }
 
