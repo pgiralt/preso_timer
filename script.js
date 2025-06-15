@@ -13,6 +13,8 @@
 let presentationData = null;
 // Track previous section for change detection
 let previousSectionName = null;
+// Wake lock reference
+let wakeLock = null;
 // Key for storing presentation data in localStorage
 const STORAGE_KEY = 'presentationTimerConfig';
 
@@ -1002,6 +1004,61 @@ function setupEventListeners() {
     }
 }
 
+// Request wake lock to prevent screen from turning off
+async function requestWakeLock() {
+    console.log('Attempting to request wake lock...');
+    
+    // Check if Wake Lock API is supported
+    if (!('wakeLock' in navigator)) {
+        console.warn('Wake Lock API is not supported in this browser');
+        return;
+    }
+    
+    console.log('Wake Lock API is supported, requesting screen wake lock...');
+    
+    try {
+        // Request a screen wake lock
+        wakeLock = await navigator.wakeLock.request('screen');
+        console.log('Wake Lock is active');
+        
+        // Log when the wake lock is released
+        wakeLock.addEventListener('release', () => {
+            console.log('Wake Lock was released');
+        });
+        
+        // Check the current state
+        console.log('Wake Lock state:', wakeLock.released ? 'released' : 'active');
+        
+        // Reacquire wake lock when the page becomes visible again
+        document.addEventListener('visibilitychange', async () => {
+            console.log('Visibility changed:', document.visibilityState);
+            
+            if (document.visibilityState === 'visible' && wakeLock !== null) {
+                try {
+                    console.log('Reacquiring wake lock...');
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Wake Lock reacquired after page visibility change');
+                } catch (err) {
+                    console.error('Error reacquiring wake lock:', err);
+                }
+            }
+        });
+    } catch (err) {
+        console.error('Error requesting wake lock:', err);
+    }
+}
+
+// Release wake lock when not needed
+function releaseWakeLock() {
+    if (wakeLock !== null) {
+        wakeLock.release()
+            .then(() => {
+                wakeLock = null;
+                console.log('Wake Lock released');
+            });
+    }
+}
+
 // Initialize when the page loads
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -1073,6 +1130,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Start updating display
         updateDisplay();
         setInterval(updateDisplay, 1000);
+        
+        // Request wake lock when the page loads
+        requestWakeLock();
     } catch (error) {
         console.error('Error initializing presentation timer:', error);
         console.error('Full error details:', error);
