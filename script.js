@@ -8,11 +8,13 @@
 // - Buttons to adjust section times (+/-)
 
 // Global Variables
-// ---------------
+// ----------------
 // presentationData: Stores the parsed YAML data
 let presentationData = null;
 // Track previous section for change detection
 let previousSectionName = null;
+// Key for storing presentation data in localStorage
+const STORAGE_KEY = 'presentationTimerConfig';
 
 /**
  * Parses a time string in HH:MM:SS format to a Date object
@@ -859,6 +861,46 @@ function validateAndProcessYAML(data) {
 }
 
 /**
+ * Saves the YAML text to localStorage
+ * @param {string} yamlText - The YAML text to save
+ */
+function saveYAMLToStorage(yamlText) {
+    try {
+        localStorage.setItem(STORAGE_KEY, yamlText);
+        console.log('Successfully saved YAML to localStorage');
+        return true;
+    } catch (error) {
+        console.warn('Failed to save YAML to localStorage:', error);
+        return false;
+    }
+}
+
+/**
+ * Loads YAML text from localStorage
+ * @returns {string|null} The saved YAML text or null if not found
+ */
+function loadYAMLFromStorage() {
+    try {
+        return localStorage.getItem(STORAGE_KEY);
+    } catch (error) {
+        console.warn('Failed to load YAML from localStorage:', error);
+        return null;
+    }
+}
+
+/**
+ * Clears the saved YAML from localStorage
+ */
+function clearYAMLFromStorage() {
+    try {
+        localStorage.removeItem(STORAGE_KEY);
+        console.log('Successfully cleared YAML from localStorage');
+    } catch (error) {
+        console.warn('Failed to clear YAML from localStorage:', error);
+    }
+}
+
+/**
  * Handles file import and processing
  * @param {File} file - Selected YAML file
  */
@@ -870,6 +912,9 @@ function importYAMLFile(file) {
             const yamlText = e.target.result;
             // Parse the YAML data
             const newData = parseYAMLData(yamlText);
+            
+            // Save the YAML text to localStorage before updating the UI
+            saveYAMLToStorage(yamlText);
             
             // Update the presentation data
             presentationData = newData;
@@ -895,11 +940,6 @@ function importYAMLFile(file) {
             console.error('Error importing YAML file:', error);
             alert(`Error importing YAML file: ${error.message}`);
         }
-    };
-    
-    reader.onerror = function() {
-        console.error('Error reading file');
-        alert('Error reading the file. Please try again.');
     };
     
     reader.readAsText(file);
@@ -965,8 +1005,24 @@ function setupEventListeners() {
 // Initialize when the page loads
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // Initialize presentation data
-        presentationData = await loadPresentationData();
+        // Try to load YAML from localStorage first
+        const savedYAML = loadYAMLFromStorage();
+        if (savedYAML) {
+            try {
+                // Parse the saved YAML data
+                const parsedData = parseYAMLData(savedYAML);
+                console.log('Successfully loaded YAML from localStorage');
+                presentationData = parsedData;
+            } catch (parseError) {
+                console.warn('Failed to parse saved YAML, falling back to default', parseError);
+                // If parsing fails, clear the invalid data and load default
+                clearYAMLFromStorage();
+                presentationData = await loadPresentationData();
+            }
+        } else {
+            // No saved YAML, load default data
+            presentationData = await loadPresentationData();
+        }
         
         // Set presentation title
         const titleElement = document.getElementById('title');
