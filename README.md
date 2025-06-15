@@ -4,6 +4,8 @@ This is a web-based presentation timer that helps speakers stay on track during 
 
 Once the configuration is loaded, the timer will display the current section, time remaining, and provide a visual timeline of all sections. If the start time is in the future, the timer will display the time remaining until the start time then automaticlaly start counting down from the first section. Once the end of the section is reached, the timer will move to the next section and continue until all sections are completed.
 
+![Presentation Timer Screenshot](https://github.com/pgiralt/preso_timer/blob/main/preso_timer_example.png?raw=true)
+
 ## Features
 
 - **Real-time Timing**: Displays a large countdown timer with time remaining in the current section of the presentation
