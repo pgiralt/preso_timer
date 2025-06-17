@@ -316,6 +316,7 @@ function updateTimelineDisplay() {
         // Get current section to highlight it
         const currentSection = getCurrentSection(currentTime);
         const currentSectionName = currentSection ? currentSection.name : null;
+        const currentSectionIndex = currentSection ? currentSection.index : -1;
         
         // Check if we need to update the timeline at all
         const existingItems = timeline.querySelectorAll('.timeline-item');
@@ -336,12 +337,12 @@ function updateTimelineDisplay() {
             timeline.innerHTML = '';
             
             presentationData.sections.forEach((section, index) => {
-                createTimelineItem(section, index, currentSectionName, currentTime);
+                createTimelineItem(section, index, currentSectionIndex, currentTime);
             });
         } else {
             // Just update the existing items
             presentationData.sections.forEach((section, index) => {
-                updateTimelineItem(section, index, currentSectionName, currentTime, timeline);
+                updateTimelineItem(section, index, currentSectionIndex, currentTime, timeline);
             });
         }
         
@@ -359,7 +360,7 @@ function updateTimelineDisplay() {
         // Auto-scroll to current section if it changed
         if (currentSectionName !== previousSectionName) {
             console.log('Section changed from', previousSectionName, 'to', currentSectionName);
-            scrollToCurrentSection(currentSectionName);
+            scrollToCurrentSection(currentSectionIndex);
             previousSectionName = currentSectionName;
         }
     } catch (error) {
@@ -370,7 +371,7 @@ function updateTimelineDisplay() {
 /**
  * Creates a new timeline item
  */
-function createTimelineItem(section, index, currentSectionName, currentTime) {
+function createTimelineItem(section, index, currentSectionIndex, currentTime) {
     try {
         const timeline = document.getElementById('timeline');
         if (!timeline) return;
@@ -385,8 +386,8 @@ function createTimelineItem(section, index, currentSectionName, currentTime) {
         item.className = 'timeline-item';
         item.id = `section-${index}`;
         
-        // Highlight current section
-        if (section.name === currentSectionName) {
+        // Highlight current section using index for unique identification
+        if (index === currentSectionIndex) {
             item.classList.add('current-section');
         }
         
@@ -436,7 +437,7 @@ function createTimelineItem(section, index, currentSectionName, currentTime) {
 /**
  * Updates an existing timeline item
  */
-function updateTimelineItem(section, index, currentSectionName, currentTime, timeline) {
+function updateTimelineItem(section, index, currentSectionIndex, currentTime, timeline) {
     try {
         const item = document.getElementById(`section-${index}`);
         if (!item) {
@@ -444,8 +445,8 @@ function updateTimelineItem(section, index, currentSectionName, currentTime, tim
             return;
         }
         
-        // Update current section highlighting
-        if (section.name === currentSectionName) {
+        // Update current section highlighting using index for unique identification
+        if (index === currentSectionIndex) {
             item.classList.add('current-section');
         } else {
             item.classList.remove('current-section');
@@ -648,7 +649,7 @@ function updateDisplay() {
 /**
  * Gets the current section based on the given time
  * @param {Date} time - Current time
- * @returns {Object|null} - Current section object or null if not found
+ * @returns {Object|null} - Current section object with index or null if not found
  */
 function getCurrentSection(time) {
     try {
@@ -673,7 +674,8 @@ function getCurrentSection(time) {
                     currentSection = {
                         name: section.name,
                         start: sectionStart,
-                        end: sectionEnd
+                        end: sectionEnd,
+                        index: index  // Include the section index
                     };
                     return true; // Stop searching when we find the current section
                 }
@@ -767,11 +769,11 @@ function adjustTimes(minutes) {
 
 /**
  * Scrolls to the current section in the timeline
- * @param {string} currentSectionName - Name of the current section
+ * @param {number} currentSectionIndex - Index of the current section, or -1 if no section is active
  */
-function scrollToCurrentSection(currentSectionName) {
+function scrollToCurrentSection(currentSectionIndex) {
     try {
-        if (!currentSectionName) {
+        if (currentSectionIndex === -1) {
             return;
         }
         
@@ -783,9 +785,9 @@ function scrollToCurrentSection(currentSectionName) {
         }
         
         // Find the current section element
-        const currentSectionElement = timelineContainer.querySelector('.timeline-item.current-section');
+        const currentSectionElement = document.getElementById(`section-${currentSectionIndex}`);
         if (!currentSectionElement) {
-            console.error('Current section element not found for:', currentSectionName);
+            console.error('Current section element not found for index:', currentSectionIndex);
             return;
         }
         
