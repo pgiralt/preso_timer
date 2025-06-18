@@ -1,15 +1,93 @@
+:root {
+    --bg-color: #f5f5f5;
+    --container-bg: white;
+    --text-color: #333;
+    --header-bg: #f8f9fa;
+    --header-border: #dee2e6;
+    --section-bg: white;
+    --section-border: #e9ecef;
+    --section-hover: #f8f9fa;
+    --current-section-bg: #e9ecef;
+    --current-time-bg: #f8f9fa;
+    --current-time-border: #dee2e6;
+    --button-bg: #f8f9fa;
+    --button-border: #dee2e6;
+    --button-hover: #e2e6ea;
+    --button-text: #212529;
+    --timeline-connector: #dee2e6;
+    --timeline-dot: #6c757d;
+    --timeline-dot-border: #f8f9fa;
+    
+    /* Alert and status colors */
+    --success-bg: rgba(40, 167, 69, 0.15);
+    --success-color: #155724;
+    --success-border: rgba(40, 167, 69, 0.3);
+    
+    --warning-bg: rgba(255, 193, 7, 0.15);
+    --warning-color: #856404;
+    --warning-border: rgba(255, 193, 7, 0.3);
+    
+    --danger-bg: rgba(220, 53, 69, 0.15);
+    --danger-color: #721c24;
+    --danger-border: rgba(220, 53, 69, 0.3);
+    
+    --info-bg: rgba(23, 162, 184, 0.15);
+    --info-color: #0c5460;
+    --info-border: rgba(23, 162, 184, 0.3);
+}
+
+[data-theme="dark"] {
+    --bg-color: #1a1a1a;
+    --container-bg: #2d2d2d;
+    --text-color: #e0e0e0;
+    --header-bg: #333333;
+    --header-border: #444;
+    --section-bg: #3a3a3a;
+    --section-border: #444;
+    --section-hover: #444;
+    --current-section-bg: #4a4a4a;
+    --current-time-bg: #333333;
+    --current-time-border: #444;
+    --button-bg: #444;
+    --button-border: #555;
+    --button-hover: #555;
+    --button-text: #f8f9fa;
+    --timeline-connector: #555;
+    --timeline-dot: #888;
+    --timeline-dot-border: #2d2d2d;
+    
+    /* Dark mode alert and status colors */
+    --success-bg: rgba(72, 180, 97, 0.2);
+    --success-color: #75b798;
+    --success-border: rgba(72, 180, 97, 0.3);
+    
+    --warning-bg: rgba(255, 193, 7, 0.2);
+    --warning-color: #ffd351;
+    --warning-border: rgba(255, 193, 7, 0.3);
+    
+    --danger-bg: rgba(220, 53, 69, 0.2);
+    --danger-color: #ea868f;
+    --danger-border: rgba(220, 53, 69, 0.3);
+    
+    --info-bg: rgba(23, 162, 184, 0.2);
+    --info-color: #6edff6;
+    --info-border: rgba(23, 162, 184, 0.3);
+}
+
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f5f5f5;
+    background-color: var(--bg-color);
+    color: var(--text-color);
     height: 100vh;
     overflow: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .container {
     margin: 0 auto;
-    background-color: white;
+    background-color: var(--container-bg);
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     height: 100vh;
     display: flex;
@@ -20,31 +98,37 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 20px;
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
-    gap: 15px;
+    padding: 12px 15px;
+    background-color: var(--header-bg);
+    border-bottom: 1px solid var(--header-border);
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 .header-section {
-    flex: 1;
-    min-width: 0; /* Allows flex items to shrink below their content size */
     display: flex;
     align-items: center;
+    flex-shrink: 0;
 }
 
-/* First section - Title */
+/* Title section - takes available space */
 .header-section:first-child {
+    flex: 1;
+    min-width: 150px; /* Ensure title has minimum width */
     justify-content: flex-start;
 }
 
-/* Middle sections */
-.header-section:not(:first-child):not(:last-child) {
+/* Middle sections (Start Time) */
+.header-section:nth-child(3) {
+    flex: 2;
+    min-width: 250px; /* Give more space to time controls */
     justify-content: center;
 }
 
-/* Last section - Current Time */
+/* Theme toggle and time sections */
+.header-section:nth-child(2),
 .header-section:last-child {
+    width: auto;
     justify-content: flex-end;
 }
 
@@ -53,33 +137,39 @@ body {
     font-size: 24px;
     font-weight: bold;
     text-align: left;
+    color: var(--text-color);
 }
 
 .header-controls {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     align-items: center;
-    width: 100%;
     justify-content: center;
+    flex-wrap: wrap;
 }
 
 .start-time-container {
     display: flex;
     gap: 8px;
     align-items: center;
-    width: 100%;
     justify-content: center;
+    flex-wrap: nowrap;
+    width: 100%;
+    max-width: 100%;
+    padding: 0 10px;
 }
 
 .current-time-container {
     text-align: right;
-    width: 100%;
+    min-width: 80px; /* Ensure time has enough space */
+    padding: 0 5px;
 }
 
 #current-time {
     font-weight: bold;
     font-size: 16px;
     white-space: nowrap;
+    color: var(--text-color);
 }
 
 .start-time-container {
@@ -100,21 +190,52 @@ body {
 }
 
 #start-time-input {
-    font-size: 18px;
-    padding: 8px 12px;
-    border: 2px solid #ddd;
+    font-size: 16px;
+    padding: 8px 32px 8px 12px; /* Adjust padding to make room for icon */
+    border: 2px solid var(--button-border);
     border-radius: 6px;
-    text-align: center;
+    text-align: left; /* Align text to left to prevent overlap */
     font-weight: bold;
-    color: #333;
-    background-color: #f8f9fa;
-    transition: border-color 0.2s;
+    color: var(--text-color);
+    background-color: var(--button-bg);
+    transition: all 0.2s ease;
+    width: 180px;
+    max-width: 100%;
+    box-sizing: border-box;
+    /* Style the clock icon */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236c757d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cpolyline points='12 6 12 12 16 14'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 16px;
+    /* Hide default clock icon */
+    -webkit-appearance: none;
+    -moz-appearance: textfield;
+}
+
+/* Dark mode specific styles for the time input */
+[data-theme="dark"] #start-time-input {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23adb5bd' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cpolyline points='12 6 12 12 16 14'%3E%3C/polyline%3E%3C/svg%3E");
 }
 
 #start-time-input:focus {
     outline: none;
     border-color: #2196F3;
-    background-color: white;
+    background-color: var(--section-bg);
+}
+
+/* Hide the default calendar picker indicator */
+input[type="time"]::-webkit-calendar-picker-indicator {
+    display: none;
+}
+
+/* Firefox */
+input[type="time"]::-moz-calendar-picker-indicator {
+    display: none;
+}
+
+/* Hide the clear button in Edge */
+input[type="time"]::-ms-clear {
+    display: none;
 }
 
 .current-time-container {
@@ -125,7 +246,7 @@ body {
 #current-time {
     font-size: 24px;
     font-weight: bold;
-    color: #333;
+    color: inherit;
 }
 
 .timeline-container {
@@ -171,13 +292,28 @@ body {
 }
 
 .timeline-item:hover {
-    background-color: #f8f9fa;
+    background-color: var(--section-hover);
 }
 
 .timeline-item.current-section {
-    background-color: #e3f2fd;
-    border: 2px solid #2196F3;
-    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+    background-color: var(--current-section-bg);
+    border-left: 4px solid #0d6efd;
+    padding-left: 8px;
+    position: relative;
+    z-index: 1;
+}
+
+/* Add a subtle shadow to make the current section stand out */
+.timeline-item.current-section::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    box-shadow: 0 0 10px rgba(13, 110, 253, 0.3);
+    border-radius: 4px;
+    z-index: -1;
 }
 
 .duration-container {
@@ -191,18 +327,19 @@ body {
 .duration-input {
     width: 75px;
     padding: 6px 10px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--button-border);
     border-radius: 3px;
     font-size: 27px;
     text-align: center;
-    background-color: #f8f9fa;
+    background-color: var(--button-bg);
+    color: var(--text-color);
     transition: border-color 0.2s, background-color 0.2s;
 }
 
 .duration-input:focus {
     outline: none;
     border-color: #2196F3;
-    background-color: white;
+    background-color: var(--section-bg);
 }
 
 .duration-input:hover {
@@ -229,41 +366,58 @@ body {
     border: 1px solid transparent;
 }
 
-.time-box.green {
-    background-color: #d4edda;
-    color: #155724;
-    border-color: #c3e6cb;
+.time-box.green,
+.alert-success,
+.alert-time-ok {
+    background-color: var(--success-bg);
+    color: var(--success-color);
+    border-color: var(--success-border);
 }
 
-.time-box.yellow {
-    background-color: #fff3cd;
-    color: #856404;
-    border-color: #ffeaa7;
+.time-box.yellow,
+.alert-warning,
+.alert-time-warning {
+    background-color: var(--warning-bg);
+    color: var(--warning-color);
+    border-color: var(--warning-border);
 }
 
-.time-box.red {
-    background-color: #f8d7da;
-    color: #721c24;
-    border-color: #f5c6cb;
+.time-box.red,
+.alert-danger {
+    background-color: var(--danger-bg);
+    color: var(--danger-color);
+    border-color: var(--danger-border);
 }
 
-.time-box.upcoming {
-    background-color: #e3f2fd;
-    color: #1565c0;
-    border-color: #90caf9;
+.time-box.upcoming,
+.alert-info {
+    background-color: var(--info-bg);
+    color: var(--info-color);
+    border-color: var(--info-border);
 }
 
 .time-box.current {
-    background-color: #fff3cd;
-    color: #856404;
-    border-color: #ffeaa7;
+    background-color: var(--warning-bg);
+    color: var(--warning-color);
+    border-color: var(--warning-border);
     box-shadow: 0 2px 6px rgba(255, 152, 0, 0.2);
 }
 
 .time-box.completed {
-    background-color: #d4edda;
-    color: #155724;
-    border-color: #c3e6cb;
+    background-color: var(--success-bg);
+    color: var(--success-color);
+    border-color: var(--success-border);
+}
+
+/* Alert styles */
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--text-color);
 }
 
 .time-display-container {
@@ -290,23 +444,24 @@ body {
 
 #current-section-name {
     font-size: clamp(28px, 3vw, 48px);
-    color: #333;
+    color: var(--text-color);
     font-weight: bold;
 }
 
 #current-section-duration {
     font-size: clamp(18px, 2vw, 28px);
-    color: #666;
+    color: var(--text-color);
+    opacity: 0.8;
     margin-top: 2px;
     font-style: italic;
 }
 
 #current-section-name.presentation-complete {
-    color: #F44336 !important;
+    color: #f44336 !important; /* Red for presentation complete */
 }
 
 #current-section-name.time-until-start {
-    color: #2196F3 !important;
+    color: #2196F3 !important; /* Blue for time until start */
 }
 
 #time-remaining {
@@ -316,10 +471,11 @@ body {
     padding: 8px 15px;
     border-radius: 6px;
     min-width: min(200px, 20vw);
-    background-color: white;
+    background-color: var(--container-bg);
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     flex-shrink: 0;
     line-height: 1;
+    color: var(--text-color) !important;
 }
 
 #time-remaining.green {
@@ -352,7 +508,7 @@ body {
 }
 
 h1 {
-    color: #333 !important;
+    color: var(--text-color) !important;
     font-size: 1.5em;
     margin: 0;
 }
@@ -421,19 +577,20 @@ h1 {
 .current-info-container {
     margin-bottom: 20px;
     padding: 20px;
-    background-color: #f8f9fa;
+    background-color: var(--section-bg);
     border-radius: 8px;
-    border: 2px solid #e9ecef;
+    border: 2px solid var(--section-border);
     margin: 0 20px 20px 20px;
     position: sticky;
     top: 80px;
     z-index: 99;
+    color: var(--text-color);
 }
 
 .time-info {
     font-size: 24px;
     font-weight: bold;
-    color: #007bff;
+    color: var(--text-color);
 }
 
 .time-adjustment-buttons {
@@ -473,24 +630,25 @@ h1 {
 
 .section-name {
     font-weight: bold;
-    color: #333;
+    color: var(--text-color);
 }
 
-#import-button {
+#import-button, input[type="file"] + label {
     padding: 8px 16px;
     font-size: 16px;
     font-weight: 600;
-    border: 2px solid #ddd;
-    border-radius: 6px;
+    border: 2px solid var(--button-border);
+    border-radius: 4px;
+    background-color: var(--button-bg);
+    color: var(--button-text);
     cursor: pointer;
-    background-color: #f8f9fa;
-    color: #333;
     transition: all 0.2s ease;
+    text-align: center;
     white-space: nowrap;
-    height: 42px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 #import-button:hover {
@@ -510,16 +668,18 @@ h1 {
     padding: 8px 16px;
     font-size: 16px;
     font-weight: 600;
-    border: 2px solid #ddd;
-    border-radius: 6px;
+    border: 2px solid var(--button-border);
+    border-radius: 4px;
+    background-color: var(--button-bg);
+    color: var(--button-text);
     cursor: pointer;
-    background-color: #f8f9fa;
-    color: #333;
     transition: all 0.2s ease;
-    height: 42px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 #now-button:hover {
@@ -535,34 +695,35 @@ h1 {
     box-shadow: none;
 }
 
-/* No sections message */
+.timeline-connector {
+    position: absolute;
+    left: 50%;
+    width: 2px;
+    background-color: var(--timeline-connector);
+    height: 100%;
+    z-index: 0;
+}
+
+.timeline-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: var(--timeline-dot);
+    border: 2px solid var(--timeline-dot-border);
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+    margin-top: 4px;
+}
+
 .no-sections {
     text-align: center;
     padding: 2rem;
-    color: #666;
+    color: var(--text-color);
     line-height: 1.6;
-}
-
-.no-sections p {
-    margin: 0.5rem 0;
-}
-
-.no-sections .download-link {
-    color: #2196F3;
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.2s;
-}
-
-.no-sections .download-link:hover {
-    color: #0b7dda;
-    text-decoration: underline;
-}
-
-.no-sections {
     font-size: 1.2em;
-    background-color: #f9f9f9;
-    border: 2px dashed #ddd;
+    background-color: var(--section-bg);
+    border: 2px dashed var(--section-border);
     border-radius: 8px;
     margin: 20px 0;
     max-width: 600px;
@@ -570,9 +731,55 @@ h1 {
     margin-right: auto;
 }
 
+.no-sections p {
+    margin: 0.5rem 0;
+}
+
+.no-sections .download-link {
+    color: var(--info-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.no-sections .download-link:hover {
+    color: var(--info-color);
+    opacity: 0.8;
+    text-decoration: underline;
+}
+
 .no-sections:before {
     content: '📋';
     display: block;
     font-size: 3em;
     margin-bottom: 15px;
+}
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+    background-color: var(--button-bg);
+    border: 2px solid var(--button-border);
+    border-radius: 6px;
+    color: var(--button-text);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 6px 12px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 70px;
+    height: 36px;
+}
+
+.theme-toggle-btn:hover {
+    background-color: var(--button-hover);
+    border-color: var(--button-hover);
+}
+
+.theme-text {
+    display: inline-block;
+    text-align: center;
 }

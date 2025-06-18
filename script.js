@@ -1061,8 +1061,80 @@ function releaseWakeLock() {
     }
 }
 
+// Theme management
+const THEME_STORAGE_KEY = 'presentationTimerTheme';
+
+/**
+ * Toggles between light and dark theme
+ */
+function toggleTheme() {
+    const html = document.documentElement;
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    const newTheme = isDark ? 'light' : 'dark';
+    
+    // Update the theme
+    html.setAttribute('data-theme', newTheme);
+    
+    // Save preference to localStorage
+    try {
+        localStorage.setItem(THEME_STORAGE_KEY, newTheme);
+    } catch (e) {
+        console.warn('Could not save theme preference to localStorage', e);
+    }
+    
+    // Update the button text
+    updateThemeToggleText(newTheme);
+}
+
+/**
+ * Updates the theme toggle button text based on current theme
+ * @param {string} theme - The current theme ('light' or 'dark')
+ */
+function updateThemeToggleText(theme) {
+    const themeToggle = document.getElementById('theme-toggle');
+    if (!themeToggle) return;
+    
+    const textElement = themeToggle.querySelector('.theme-text');
+    if (!textElement) return;
+    
+    textElement.textContent = theme === 'dark' ? 'Light' : 'Dark';
+}
+
+/**
+ * Initializes the theme based on user preference or system settings
+ */
+function initializeTheme() {
+    const html = document.documentElement;
+    let theme = 'light';
+    
+    try {
+        // Check for saved user preference
+        const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+        if (savedTheme) {
+            theme = savedTheme;
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            // Check system preference if no saved preference
+            theme = 'dark';
+        }
+    } catch (e) {
+        console.warn('Could not read theme preference', e);
+    }
+    
+    // Apply the theme
+    html.setAttribute('data-theme', theme);
+    updateThemeToggleText(theme);
+}
+
 // Initialize when the page loads
 document.addEventListener('DOMContentLoaded', async () => {
+    // Initialize theme
+    initializeTheme();
+    
+    // Set up theme toggle button
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme);
+    }
     try {
         // Try to load YAML from localStorage first
         const savedYAML = loadYAMLFromStorage();
