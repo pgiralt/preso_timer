@@ -652,8 +652,8 @@ h1 {
 }
 
 #import-button:hover {
-    background-color: #e9ecef;
-    border-color: #bbb;
+    background-color: var(--button-hover);
+    border-color: var(--button-hover);
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
@@ -683,8 +683,8 @@ h1 {
 }
 
 #now-button:hover {
-    background-color: #e9ecef;
-    border-color: #bbb;
+    background-color: var(--button-hover);
+    border-color: var(--button-hover);
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
