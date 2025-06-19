@@ -562,7 +562,11 @@ function updateDisplay() {
             
             if (timeRemainingElement) {
                 timeRemainingElement.textContent = '00:00';
-                timeRemainingElement.className = '';
+                
+                // Don't modify classes if we're in narrow screen mode
+                if (!isNarrowScreen() || isLandscapeSmallScreen()) {
+                    timeRemainingElement.className = '';
+                }
             }
             
             // Clear the timeline
@@ -602,7 +606,14 @@ function updateDisplay() {
             if (timeRemainingElement) {
                 const timeUntilStart = startTimeMs - currentTimeMs;
                 timeRemainingElement.textContent = formatDuration(timeUntilStart);
-                timeRemainingElement.className = 'time-remaining blue';
+                
+                // Don't modify classes if we're in narrow screen mode
+                if (!isNarrowScreen() || isLandscapeSmallScreen()) {
+                    timeRemainingElement.className = 'time-remaining blue';
+                } else {
+                    // Just add the color class without changing other classes
+                    timeRemainingElement.classList.add('blue');
+                }
             }
         } else if (currentSection) {
             // During presentation - show current section
@@ -624,7 +635,23 @@ function updateDisplay() {
                 timeRemainingElement.textContent = formatDuration(timeRemaining);
                 
                 // Add color class based on time remaining
-                timeRemainingElement.className = 'time-remaining';
+                if (!isNarrowScreen() || isLandscapeSmallScreen()) {
+                    // Only replace class in non-narrow screen mode
+                    timeRemainingElement.className = 'time-remaining';
+                } else {
+                    // In narrow screen mode, just make sure we have the necessary classes
+                    if (!timeRemainingElement.classList.contains('portrait-mode')) {
+                        timeRemainingElement.classList.add('portrait-mode');
+                    }
+                    if (!timeRemainingElement.classList.contains('narrow-screen')) {
+                        timeRemainingElement.classList.add('narrow-screen');
+                    }
+                }
+                
+                // Remove any existing color classes
+                timeRemainingElement.classList.remove('red', 'yellow', 'green', 'blue');
+                
+                // Add the appropriate color class
                 if (timeRemaining <= 0) {
                     timeRemainingElement.classList.add('red');
                 } else if (timeRemaining <= 1 * 60 * 1000) { // 1 minute or less
@@ -655,11 +682,40 @@ function updateDisplay() {
                 if (elapsedTime > 0) {
                     // Show elapsed time as positive count-up
                     timeRemainingElement.textContent = '+' + formatDuration(elapsedTime);
-                    timeRemainingElement.className = 'time-remaining red';
+                    
+                    if (!isNarrowScreen() || isLandscapeSmallScreen()) {
+                        // Only replace class in non-narrow screen mode
+                        timeRemainingElement.className = 'time-remaining red';
+                    } else {
+                        // In narrow screen mode, preserve existing classes and just add/remove color classes
+                        if (!timeRemainingElement.classList.contains('portrait-mode')) {
+                            timeRemainingElement.classList.add('portrait-mode');
+                        }
+                        if (!timeRemainingElement.classList.contains('narrow-screen')) {
+                            timeRemainingElement.classList.add('narrow-screen');
+                        }
+                        // Remove existing color classes and add red
+                        timeRemainingElement.classList.remove('green', 'yellow', 'blue');
+                        timeRemainingElement.classList.add('red');
+                    }
                 } else {
                     // If somehow we're before the last section ends, show empty
                     timeRemainingElement.textContent = '';
-                    timeRemainingElement.className = 'time-remaining';
+                    
+                    if (!isNarrowScreen() || isLandscapeSmallScreen()) {
+                        // Only replace class in non-narrow screen mode
+                        timeRemainingElement.className = 'time-remaining';
+                    } else {
+                        // In narrow screen mode, preserve existing classes
+                        if (!timeRemainingElement.classList.contains('portrait-mode')) {
+                            timeRemainingElement.classList.add('portrait-mode');
+                        }
+                        if (!timeRemainingElement.classList.contains('narrow-screen')) {
+                            timeRemainingElement.classList.add('narrow-screen');
+                        }
+                        // Remove any color classes
+                        timeRemainingElement.classList.remove('red', 'green', 'yellow', 'blue');
+                    }
                 }
             }
         }
@@ -1291,6 +1347,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 
+// Function to check if we're in narrow screen mode
+function isNarrowScreen() {
+    return window.innerWidth < 900;
+}
+
+// Function to check if we're in landscape mode on a small screen
+function isLandscapeSmallScreen() {
+    return window.innerWidth > window.innerHeight && window.innerHeight <= 600;
+}
+
 /**
  * Dynamic Timer Sizing
  * Adjusts font size to maximize visibility based on content length
@@ -1325,11 +1391,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to find the optimal font size
     function findOptimalFontSize() {
-        // Get timer container dimensions
-        const container = timer.parentNode;
+        // Check if we're in narrow screen mode (width < 900px)
+        const isNarrowScreen = window.innerWidth < 900;
         
         // Check if we're in landscape mode on a mobile device (height ≤ 600px)
         const isLandscape = window.innerWidth > window.innerHeight && window.innerHeight <= 600;
+        
+        // Skip dynamic sizing in narrow screens (portrait) to prevent flickering with CSS
+        if (isNarrowScreen && !isLandscape) {
+            // For narrow screens in portrait mode, let CSS handle it
+            timer.removeAttribute('style'); // Clean any inline styles
+            timer.classList.add('portrait-mode');
+            timer.classList.add('narrow-screen');
+            return; // Exit early - don't process any further
+        }
+        
+        // Get timer container dimensions
+        const container = timer.parentNode;
         
         // Use different constraints based on orientation
         const containerWidth = isLandscape ? 
@@ -1380,7 +1458,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 max = mid - 1; // Too big, try smaller
             }
         }
-        
+         
         if (isLandscape) {
             // LANDSCAPE MODE: Override CSS with more aggressive sizing
             
@@ -1413,16 +1491,40 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Force font size with important flag
             timer.style.setProperty('font-size', finalSize + 'px', 'important');
+            timer.classList.remove('portrait-mode');
+            timer.classList.remove('narrow-screen');
         } else {
-            // PORTRAIT/DESKTOP MODE: Restore to original behavior
-            // Remove all our inline styles and force the CSS style to take over
+            // NORMAL PORTRAIT/DESKTOP MODE: Restore to original behavior
             timer.removeAttribute('style'); // Complete removal of all inline styles
-            
-            // Make sure we don't interfere with CSS styling in portrait mode
             timer.classList.add('portrait-mode');
+            timer.classList.remove('narrow-screen');
         }
     }
     
+    // Using global isNarrowScreen and isLandscapeSmallScreen functions
+    
+    // Wrapper function that only calls findOptimalFontSize when appropriate
+    function conditionalFontSizing() {
+        // Skip dynamic sizing in narrow screens (portrait) to prevent flickering
+        if (isNarrowScreen() && !isLandscapeSmallScreen()) {
+            // For narrow screens in portrait mode, let CSS handle it
+            timer.removeAttribute('style'); // Clean any inline styles
+            timer.classList.add('portrait-mode');
+            timer.classList.add('narrow-screen');
+        } else {
+            // Only do dynamic sizing in landscape or wider screens
+            findOptimalFontSize();
+        }
+    }
+    
+    // Initial setup for narrow screens
+    if (isNarrowScreen() && !isLandscapeSmallScreen()) {
+        // For narrow screens in portrait mode, just set the classes and remove styles
+        timer.removeAttribute('style');
+        timer.classList.add('portrait-mode');
+        timer.classList.add('narrow-screen');
+    }
+
     // Debounce function to prevent too many calculations
     function debounce(func, wait) {
         let timeout;
@@ -1432,8 +1534,8 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     }
     
-    // Debounced version of the resize function
-    const debouncedResize = debounce(findOptimalFontSize, 50);
+    // Debounced version of the conditional function
+    const debouncedResize = debounce(conditionalFontSizing, 50);
     
     // Watch for text changes
     const observer = new MutationObserver(debouncedResize);

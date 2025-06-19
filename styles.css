@@ -980,8 +980,21 @@ h1 {
         display: none; /* Hide the duration display on small screens */
     }
 
-    #time-remaining {
-        margin: 0 auto;
+    /* Stronger selector to override JavaScript styling */
+    html body .container .current-info-container #time-remaining,
+    #time-remaining.narrow-screen,
+    #time-remaining.portrait-mode.narrow-screen {
+        font-size: clamp(120px, 20vw, 400px) !important;
+        margin: 10px 0 !important;
+        padding: 8px 5px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        line-height: 0.85 !important;
+        max-height: none !important;
     }
     
     /* Hide time adjustment buttons at same breakpoint */
