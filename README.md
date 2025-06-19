@@ -14,6 +14,7 @@ Once the configuration is loaded, the timer will display the current section, ti
   - Adjust section durations on the fly
   - Set custom start times
   - Import presentation configurations
+- **Responsive, Mobile-friendly UI**: Allows you to easily use a mobile device as a presentation timer. Works particularly well in landscape mode.
 - **No Server Required**: Runs entirely in the browser. While you can easily host this on any web server, you can also run it locally by opening the `index.html` file in a web browser.
 
 ## Getting Started
