@@ -311,12 +311,32 @@ function updateTimelineDisplay() {
     try {
         const currentTime = new Date();
         const timeline = document.getElementById('timeline');
-        if (!timeline || !presentationData) return;
+        const nextSectionElement = document.getElementById('next-section');
+        if (!presentationData) return;
 
         // Get current section to highlight it
         const currentSection = getCurrentSection(currentTime);
         const currentSectionName = currentSection ? currentSection.name : null;
-        const currentSectionIndex = currentSection ? currentSection.index : -1;
+        const currentSectionIndex = currentSection ? presentationData.sections.findIndex(s => s.name === currentSectionName) : -1;
+        
+        // Update next section display for landscape mode
+        if (nextSectionElement) {
+            let nextSection = null;
+            
+            if (currentSectionIndex !== -1 && currentSectionIndex < presentationData.sections.length - 1) {
+                // Get the next section after current one
+                nextSection = presentationData.sections[currentSectionIndex + 1];
+            } else if (currentSectionIndex === -1 && presentationData.sections.length > 0) {
+                // If no current section or before presentation starts, show first section
+                nextSection = presentationData.sections[0];
+            }
+            
+            if (nextSection) {
+                nextSectionElement.textContent = `${nextSection.name} (${nextSection.duration}m)`;
+            } else {
+                nextSectionElement.textContent = "End of presentation";
+            }
+        }
         
         // Check if we need to update the timeline at all
         const existingItems = timeline.querySelectorAll('.timeline-item');
@@ -394,7 +414,12 @@ function createTimelineItem(section, index, currentSectionIndex, currentTime) {
         // Section name (left column)
         const sectionName = document.createElement('div');
         sectionName.className = 'section-name';
-        sectionName.textContent = section.name;
+        
+        // For responsive design, include duration in parentheses on small screens
+        const isResponsiveMode = window.matchMedia('(max-width: 768px), (max-height: 600px) and (orientation: landscape)').matches;
+        sectionName.textContent = isResponsiveMode ? 
+            `${section.name} (${section.duration}m)` : 
+            section.name;
         
         // Duration input (middle column)
         const durationContainer = document.createElement('div');
@@ -640,9 +665,46 @@ function updateDisplay() {
         }
 
         updateTimelineDisplay();
+        updateNextSectionDisplay();
     } catch (error) {
         console.error('Error updating display:', error);
         throw error;
+    }
+}
+
+/**
+ * Update just the next section display
+ */
+function updateNextSectionDisplay() {
+    try {
+        if (!presentationData) return;
+        
+        const currentTime = new Date();
+        const nextSectionElement = document.getElementById('next-section');
+        if (!nextSectionElement) return;
+        
+        const currentSection = getCurrentSection(currentTime);
+        const currentSectionName = currentSection ? currentSection.name : null;
+        const currentSectionIndex = currentSection ? 
+            presentationData.sections.findIndex(s => s.name === currentSectionName) : -1;
+        
+        let nextSection = null;
+        
+        if (currentSectionIndex !== -1 && currentSectionIndex < presentationData.sections.length - 1) {
+            // Get the next section after current one
+            nextSection = presentationData.sections[currentSectionIndex + 1];
+        } else if (currentSectionIndex === -1 && presentationData.sections.length > 0) {
+            // If no current section or before presentation starts, show first section
+            nextSection = presentationData.sections[0];
+        }
+        
+        if (nextSection) {
+            nextSectionElement.textContent = `${nextSection.name} (${nextSection.duration}m)`;
+        } else {
+            nextSectionElement.textContent = "End of presentation";
+        }
+    } catch (error) {
+        console.error('Error updating next section display:', error);
     }
 }
 
@@ -1226,4 +1288,341 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         alert(userMessage);
     }
+});
+
+
+/**
+ * Dynamic Timer Sizing
+ * Adjusts font size to maximize visibility based on content length
+ * Enhanced for maximum font size in landscape orientation only
+ * Preserves original behavior in portrait/desktop mode
+ * Updated to ensure text fits within div boundaries
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    const timer = document.getElementById('time-remaining');
+    if (!timer) return;
+
+    // Create a hidden measuring element with the same styling
+    const measure = document.createElement('div');
+    measure.style.visibility = 'hidden';
+    measure.style.position = 'fixed';
+    measure.style.top = '-9999px';
+    measure.style.left = '-9999px';
+    measure.style.padding = '0';
+    measure.style.margin = '0';
+    measure.style.height = 'auto';
+    measure.style.width = 'auto';
+    measure.style.whiteSpace = 'nowrap';
+    measure.style.fontFamily = getComputedStyle(timer).fontFamily;
+    measure.style.fontWeight = 'bold';
+    measure.style.lineHeight = '0.85';
+    document.body.appendChild(measure);
+
+    // Define minimum and maximum font sizes (different for landscape vs portrait)
+    const MIN_FONT_SIZE = 30;
+    const MAX_FONT_SIZE_LANDSCAPE = 3000; // Larger max for landscape
+    const MAX_FONT_SIZE_PORTRAIT = 800; // More modest max for portrait
+
+    // Function to find the optimal font size
+    function findOptimalFontSize() {
+        // Get timer container dimensions
+        const container = timer.parentNode;
+        
+        // Check if we're in landscape mode on a mobile device (height ≤ 600px)
+        const isLandscape = window.innerWidth > window.innerHeight && window.innerHeight <= 600;
+        
+        // Use different constraints based on orientation
+        const containerWidth = isLandscape ? 
+            container.clientWidth * 0.99 : // 99% of width in landscape
+            container.clientWidth * 0.95;  // 95% in portrait (original behavior)
+        
+        const containerHeight = isLandscape ?
+            container.clientHeight * 0.99 : // 99% of height in landscape
+            container.clientHeight * 0.95;  // 95% in portrait (original behavior)
+        
+        // Get the current text
+        const text = timer.textContent.trim();
+        if (!text) return;
+
+        measure.textContent = text;
+        
+        // Use precise fitting for landscape mode
+        let initialSize;
+        if (isLandscape) {
+            // More precise initial sizing for landscape based on container dimensions
+            // Start with a realistic estimate based on the text length and container size
+            initialSize = Math.min(containerWidth / (text.length * 0.7), containerHeight);
+        } else {
+            // Conservative sizing for portrait/desktop
+            initialSize = Math.min(containerWidth / text.length * 0.9, containerHeight * 0.7);
+        }
+        
+        // Binary search for the optimal font size
+        let min = MIN_FONT_SIZE;
+        // Different max sizes based on orientation
+        let max = isLandscape ? 
+            Math.min(MAX_FONT_SIZE_LANDSCAPE, initialSize * 2) : // Higher cap for landscape
+            Math.min(MAX_FONT_SIZE_PORTRAIT, initialSize * 1.2);  // Lower cap for portrait
+        let optimal = min;
+        
+        while (min <= max) {
+            const mid = Math.floor((min + max) / 2);
+            measure.style.fontSize = mid + 'px';
+            
+            const width = measure.offsetWidth;
+            const height = measure.offsetHeight;
+            
+            // Check if this size fits the container
+            if (width <= containerWidth && height <= containerHeight) {
+                optimal = mid; // This size fits, save it
+                min = mid + 1; // Try a larger size
+            } else {
+                max = mid - 1; // Too big, try smaller
+            }
+        }
+        
+        if (isLandscape) {
+            // LANDSCAPE MODE: Override CSS with more aggressive sizing
+            
+            // More measured approach that ensures text fits the div boundaries
+            // Still scale based on text length, but with more conservative factors
+            const textLengthFactor = text.length <= 4 ? 1.4 : 
+                                    text.length <= 6 ? 1.3 : 
+                                    text.length <= 10 ? 1.2 : 1.0;
+                                    
+            // Calculate size based on container dimensions with a safety margin
+            let finalSize = Math.min(
+                optimal * textLengthFactor,               // Scale the optimal size
+                containerWidth * 0.9 / text.length * 1.8,  // Width-based with 90% container width and reasonable char width
+                containerHeight * 0.9                    // 90% of container height for margin
+            );
+            
+            // Apply our calculated size, but keep it contained within the div
+            timer.setAttribute('style', 
+                `font-size: ${finalSize}px !important; 
+                line-height: 0.9 !important; 
+                max-height: 100% !important; 
+                max-width: 100% !important; 
+                overflow: hidden !important; 
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                text-align: center !important;
+                font-weight: bold !important;`
+            );
+            
+            // Force font size with important flag
+            timer.style.setProperty('font-size', finalSize + 'px', 'important');
+        } else {
+            // PORTRAIT/DESKTOP MODE: Restore to original behavior
+            // Remove all our inline styles and force the CSS style to take over
+            timer.removeAttribute('style'); // Complete removal of all inline styles
+            
+            // Make sure we don't interfere with CSS styling in portrait mode
+            timer.classList.add('portrait-mode');
+        }
+    }
+    
+    // Debounce function to prevent too many calculations
+    function debounce(func, wait) {
+        let timeout;
+        return function() {
+            clearTimeout(timeout);
+            timeout = setTimeout(func, wait);
+        };
+    }
+    
+    // Debounced version of the resize function
+    const debouncedResize = debounce(findOptimalFontSize, 50);
+    
+    // Watch for text changes
+    const observer = new MutationObserver(debouncedResize);
+    observer.observe(timer, {
+        childList: true,
+        characterData: true,
+        subtree: true
+    });
+    
+    // Update on window resize
+    window.addEventListener('resize', debouncedResize);
+    
+    // Handle orientation changes
+    window.addEventListener('orientationchange', function() {
+        // Wait for orientation change to complete
+        setTimeout(findOptimalFontSize, 300);
+    });
+    
+    // Initial sizing
+    setTimeout(findOptimalFontSize, 100);
+    
+    // Run again after all page resources have loaded
+    window.addEventListener('load', findOptimalFontSize);
+    
+    // Periodic check as fallback
+    setInterval(findOptimalFontSize, 1000);
+    
+    // Force resize after CSS loading completes
+    setTimeout(findOptimalFontSize, 500);
+    setTimeout(findOptimalFontSize, 2000);
+});
+
+
+// Menu handling for responsive design
+document.addEventListener('DOMContentLoaded', function() {
+    const menuToggle = document.getElementById('menu-toggle');
+    const popupMenu = document.getElementById('popup-menu');
+    const header = document.querySelector('.header');
+    
+    // Check if we're in responsive mode
+    function isResponsiveMode() {
+        return window.matchMedia('(max-width: 768px), (max-height: 600px) and (orientation: landscape)').matches;
+    }
+    
+    // Function to move header controls to popup menu
+    function moveControlsToPopup() {
+        if (isResponsiveMode()) {
+            // Clear existing popup content
+            popupMenu.innerHTML = '';
+            
+            // Create a top row container for Import and Theme toggle
+            const topRow = document.createElement('div');
+            topRow.className = 'popup-menu-row';
+            popupMenu.appendChild(topRow);
+            
+            // Get and clone the Import Settings button
+            const importSection = header.querySelector('.header-section:nth-child(2)');
+            if (importSection) {
+                const importClone = importSection.cloneNode(true);
+                importClone.classList.add('popup-import-section');
+                topRow.appendChild(importClone);
+            }
+            
+            // Get and clone the Theme Toggle button
+            const themeSection = header.querySelector('.header-section:nth-child(4)');
+            if (themeSection) {
+                const themeClone = themeSection.cloneNode(true);
+                themeClone.classList.add('popup-theme-section');
+                topRow.appendChild(themeClone);
+            }
+            
+            // Get and clone the Start Time section
+            const startTimeSection = header.querySelector('.header-section:nth-child(3)');
+            if (startTimeSection) {
+                const timeClone = startTimeSection.cloneNode(true);
+                timeClone.classList.add('popup-starttime-section');
+                popupMenu.appendChild(timeClone);
+            }
+            
+            // Make sure all event listeners are applied to cloned elements
+            reattachEventListeners();
+        }
+    }
+    
+    // Re-attach event listeners to cloned elements
+    function reattachEventListeners() {
+        // Import button
+        const importButton = popupMenu.querySelector('#import-button');
+        const fileInput = popupMenu.querySelector('#yaml-file-input');
+        if (importButton && fileInput) {
+            importButton.addEventListener('click', () => {
+                fileInput.click();
+            });
+        }
+        
+        // Now button
+        const nowButton = popupMenu.querySelector('#now-button');
+        if (nowButton) {
+            nowButton.addEventListener('click', () => {
+                // Set current time to start time
+                const startTimeInput = popupMenu.querySelector('#start-time-input');
+                if (startTimeInput) {
+                    const now = new Date();
+                    const timeString = formatTime(now);
+                    startTimeInput.value = timeString;
+                    
+                    // Trigger recalculation
+                    const changeEvent = new Event('change', { bubbles: true });
+                    startTimeInput.dispatchEvent(changeEvent);
+                }
+            });
+        }
+        
+        // Theme toggle
+        const themeToggle = popupMenu.querySelector('#theme-toggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                // Toggle theme directly
+                const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                
+                // Update theme
+                document.documentElement.setAttribute('data-theme', newTheme);
+                
+                // Update button text
+                const themeText = themeToggle.querySelector('.theme-text');
+                if (themeText) {
+                    themeText.textContent = newTheme === 'light' ? 'Dark' : 'Light';
+                }
+                
+                // Save theme preference
+                localStorage.setItem('presentationTimerTheme', newTheme);
+            });
+        }
+        
+        // Time input handler
+        const startTimeInput = popupMenu.querySelector('#start-time-input');
+        if (startTimeInput) {
+            startTimeInput.addEventListener('change', (event) => {
+                let newStartTime = event.target.value;
+                
+                // Ensure proper HH:MM:SS format
+                if (newStartTime && newStartTime.split(':').length === 2) {
+                    newStartTime += ':00'; // Add seconds if not present
+                }
+                
+                // Call the global recalculateTimesFromStart function
+                if (typeof recalculateTimesFromStart === 'function') {
+                    recalculateTimesFromStart(newStartTime);
+                    updateDisplay();
+                }
+            });
+        }
+    }
+    
+    // Helper function to format time (copied from script.js for standalone functionality)
+    function formatTime(date) {
+        try {
+            if (!(date instanceof Date)) {
+                throw new Error('Invalid date object');
+            }
+
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            const seconds = date.getSeconds().toString().padStart(2, '0');
+            
+            return `${hours}:${minutes}:${seconds}`;
+        } catch (error) {
+            console.error('Error formatting time:', error);
+            return '00:00:00';
+        }
+    }
+    
+    // Toggle menu open/closed
+    menuToggle.addEventListener('click', function() {
+        this.classList.toggle('open');
+        popupMenu.classList.toggle('open');
+        
+        // If opening the menu and we're in responsive mode, ensure controls are moved
+        if (this.classList.contains('open') && isResponsiveMode()) {
+            moveControlsToPopup();
+        }
+    });
+    
+    // Initialize on first load
+    moveControlsToPopup();
+    
+    // Re-initialize on resize
+    window.addEventListener('resize', function() {
+        moveControlsToPopup();
+    });
 });

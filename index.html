@@ -12,7 +12,22 @@
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
+    <!-- Mobile Menu Button - Only visible on small screens -->
+    <div class="menu-button" id="menu-toggle">
+        <div class="menu-icon">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+    
+    <!-- Popup Menu Container -->
+    <div class="popup-menu" id="popup-menu">
+        <!-- Popup menu content will be dynamically loaded -->
+    </div>
+    
     <div class="container">
+        
         <div class="header">
             <!-- Section 1: Title -->
             <div class="header-section">
@@ -63,6 +78,11 @@
                 </div>
             </div>
         </div>
+        <div class="next-section-display">
+            <span class="next-section-label">Next:</span>
+            <span class="next-section-name" id="next-section"></span>
+        </div>
+        
         <div class="timeline-container">
             <div id="timeline"></div>
         </div>
