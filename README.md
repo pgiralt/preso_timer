@@ -16,7 +16,7 @@ Once the configuration is loaded, the timer will display the current section, ti
   - Import presentation configurations
 - **Responsive, Mobile-friendly UI**: Allows you to easily use a mobile device as a presentation timer. Works particularly well in landscape mode.
 - **No Server Required**: Runs entirely in the browser. While you can easily host this on any web server, you can also run it locally by opening the `index.html` file in a web browser.
-- **Wake Lock**: Attempts to keep the device awake while the timer is up. This allows you to use a device like a phone or tablet to show the timer and ensure the screen stays on. 
+- **Wake Lock**: Attempts to keep the device awake while the timer is up. This allows you to use a device like a phone or tablet to show the timer and ensure the screen stays on. To enable wake lock on an iOS device, tap the small grey icon on the bottom right corner so that it turns green. This enables wake lock. On other devices, it should enable automatically. 
 
 ## Getting Started
 
