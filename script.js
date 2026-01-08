@@ -1126,35 +1126,186 @@ function setupEventListeners() {
 
 // Track if visibility listener is registered (to avoid duplicates)
 let wakeLockVisibilityListenerAdded = false;
+// NoSleep state
+let noSleepEnabled = false;
+let noSleepVideo = null;
+
+// Update the wake lock indicator UI
+function updateWakeLockIndicator(status) {
+    const indicator = document.getElementById('wake-lock-indicator');
+    if (!indicator) return;
+    
+    indicator.classList.remove('active', 'pending');
+    
+    switch (status) {
+        case 'active':
+            indicator.classList.add('active');
+            indicator.title = 'Screen wake lock active';
+            break;
+        case 'pending':
+            indicator.classList.add('pending');
+            indicator.title = 'Tap screen to enable wake lock';
+            break;
+        default:
+            indicator.title = 'Screen wake lock inactive';
+    }
+}
+
+// Detect iOS/iPadOS (iPads report as MacIntel but have touch)
+function isIOS() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+           (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+// Minimal MP4 base64 (from NoSleep.js - known to work on iOS Safari)
+// This is a tiny valid MP4 video that iOS will play
+const NOSLEEP_MP4 = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAu1tZGF0AAACrQYF//+p3EXpvebZSLeWLNgg2SPu73gyNjQgLSBjb3JlIDE1NSByMjkwMSA3ZDBmZjIyIC0gSC4yNjQvTVBFRy00IEFWQyBjb2RlYyAtIENvcHlsZWZ0IDIwMDMtMjAxOCAtIGh0dHA6Ly93d3cudmlkZW9sYW4ub3JnL3gyNjQuaHRtbCAtIG9wdGlvbnM6IGNhYmFjPTEgcmVmPTMgZGVibG9jaz0xOjA6MCBhbmFseXNlPTB4MzoweDExMyBtZT1oZXggc3VibWU9NyBwc3k9MSBwc3lfcmQ9MS4wMDowLjAwIG1peGVkX3JlZj0xIG1lX3JhbmdlPTE2IGNocm9tYV9tZT0xIHRyZWxsaXM9MSA4eDhkY3Q9MSBjcW09MCBkZWFkem9uZT0yMSwxMSBmYXN0X3Bza2lwPTEgY2hyb21hX3FwX29mZnNldD0tMiB0aHJlYWRzPTEgbG9va2FoZWFkX3RocmVhZHM9MSBzbGljZWRfdGhyZWFkcz0wIG5yPTAgZGVjaW1hdGU9MSBpbnRlcmxhY2VkPTAgYmx1cmF5X2NvbXBhdD0wIGNvbnN0cmFpbmVkX2ludHJhPTAgYmZyYW1lcz0zIGJfcHlyYW1pZD0yIGJfYWRhcHQ9MSBiX2JpYXM9MCBkaXJlY3Q9MSB3ZWlnaHRiPTEgb3Blbl9nb3A9MCB3ZWlnaHRwPTIga2V5aW50PTI1MCBrZXlpbnRfbWluPTEgc2NlbmVjdXQ9NDAgaW50cmFfcmVmcmVzaD0wIHJjX2xvb2thaGVhZD00MCByYz1jcmYgbWJ0cmVlPTEgY3JmPTIzLjAgcWNvbXA9MC42MCBxcG1pbj0wIHFwbWF4PTY5IHFwc3RlcD00IGlwX3JhdGlvPTEuNDAgYXE9MToxLjAwAIAAAAFPZYiEABX//veBvzLIQEEZGOASQACBAJkALYFAACwzgAtQAFGAAABAAAADAAADAAADAAADAAADAAADAAADAPkAAAALQZokbEO//qmWADNwAAADABhMAAYXAAAACkGeQniEfwAAAwBxAAAACgGeYXRCfwAAAwBhAAAACgGeY2pCfwAAAwB4AAAAC0GaaEmoQWiZTAh3//6plgAzcAAAAwAYTAAGFwAAAApBnoZFESxzPwAAA4AAAAoB nqdqQn8AAAMAX0AAAA0BnqlqQn8AAAMAX0AAAA1BmqxJqEFomUwId//+qZYAM3AAAAMAGEwABhcAAAAKQZ7KRRUscz8AAAOBAAAACgGe6WpCfwAAA18AAAAMQZ7sSeEKUmUwId/+qZYAM3AAAAMAGEwABhcAAAAKQZ8KRRUscz8AAAOBAAAANWWIQAX//7zgb8yyEBBGRjgEkAAgQCZAC2BQAAsM4ALUABRgAAAQAAADAAADAAADAAADAP5moov0AAAAlG1vb3YAAABsbXZoZAAAAAAAAAAAAAAAAAAAA+gAAAPoAAEAAAEAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAGYdHJhawAAAFx0a2hkAAAAAwAAAAAAAAAAAAAAAQAAAAAAAAPoAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAACgAAAAoAAAAAAAJGVkdHMAAAAcZWxzdAAAAAAAAAABAAAD6AAAAAAAAQAAAAABEGhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABWaWRlb0hhbmRsZXIAAAAA22luZmZFmcAIBk//+94G/MshAQRkY4BJAAIEAmQAtgUAALDOAC1AAUYA';
+
+// Create and setup the NoSleep video element
+function createNoSleepVideo() {
+    if (noSleepVideo) return noSleepVideo;
+    
+    noSleepVideo = document.createElement('video');
+    noSleepVideo.setAttribute('playsinline', '');
+    noSleepVideo.setAttribute('webkit-playsinline', '');
+    noSleepVideo.setAttribute('muted', '');
+    noSleepVideo.setAttribute('loop', '');
+    noSleepVideo.setAttribute('title', 'NoSleep');
+    noSleepVideo.style.position = 'absolute';
+    noSleepVideo.style.left = '-9999px';
+    noSleepVideo.style.top = '-9999px';  
+    noSleepVideo.style.width = '1px';
+    noSleepVideo.style.height = '1px';
+    noSleepVideo.muted = true;
+    noSleepVideo.src = NOSLEEP_MP4;
+    
+    // Handle video ending (re-play for continuous effect)
+    noSleepVideo.addEventListener('ended', () => {
+        console.log('NoSleep video ended, restarting...');
+        noSleepVideo.play().catch(e => console.log('NoSleep restart failed:', e));
+    });
+    
+    // Handle timeupdate to ensure loop works even if loop attr fails
+    noSleepVideo.addEventListener('timeupdate', () => {
+        if (noSleepVideo.currentTime > 0.5) {
+            noSleepVideo.currentTime = 0;
+        }
+    });
+    
+    document.body.appendChild(noSleepVideo);
+    console.log('NoSleep video element created');
+    
+    return noSleepVideo;
+}
+
+// Enable NoSleep using video playback
+async function enableNoSleep() {
+    if (noSleepEnabled) {
+        console.log('NoSleep already enabled');
+        return true;
+    }
+    
+    console.log('Enabling NoSleep...');
+    const video = createNoSleepVideo();
+    
+    try {
+        // The play() method returns a promise
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+            await playPromise;
+        }
+        noSleepEnabled = true;
+        console.log('NoSleep enabled - video playing');
+        updateWakeLockIndicator('active');
+        return true;
+    } catch (err) {
+        console.error('NoSleep enable failed:', err.name, err.message);
+        console.log('NoSleep requires user interaction on iOS - will retry on touch/click');
+        updateWakeLockIndicator('pending');
+        return false;
+    }
+}
+
+// Disable NoSleep
+function disableNoSleep() {
+    if (noSleepVideo) {
+        noSleepVideo.pause();
+        noSleepVideo.currentTime = 0;
+    }
+    noSleepEnabled = false;
+    updateWakeLockIndicator('inactive');
+    console.log('NoSleep disabled');
+}
 
 // Request wake lock to prevent screen from turning off
 async function requestWakeLock() {
     console.log('Attempting to request wake lock...');
+    console.log('Browser:', navigator.userAgent);
+    console.log('Is iOS/iPadOS:', isIOS());
     
-    // Check if Wake Lock API is supported
+    // For iOS, use video-based NoSleep as the Wake Lock API is unreliable
+    if (isIOS()) {
+        console.log('iOS detected - using video-based NoSleep approach');
+        
+        // Try to enable NoSleep immediately
+        let noSleepSuccess = await enableNoSleep();
+        
+        // iOS requires user interaction for video autoplay
+        // Set up handlers to enable on first user touch/click if initial attempt failed
+        if (!noSleepSuccess) {
+            console.log('NoSleep requires user interaction - setting up event listeners');
+            
+            const enableOnInteraction = async (event) => {
+                console.log('User interaction detected, enabling NoSleep...');
+                const success = await enableNoSleep();
+                if (success) {
+                    document.removeEventListener('touchstart', enableOnInteraction, true);
+                    document.removeEventListener('touchend', enableOnInteraction, true);
+                    document.removeEventListener('click', enableOnInteraction, true);
+                    console.log('NoSleep enabled after user interaction');
+                }
+            };
+            
+            // Use capture phase and multiple event types for better iOS coverage
+            document.addEventListener('touchstart', enableOnInteraction, { capture: true, passive: true });
+            document.addEventListener('touchend', enableOnInteraction, { capture: true, passive: true });
+            document.addEventListener('click', enableOnInteraction, { capture: true });
+        }
+        
+        // Also try Wake Lock API as a secondary measure (may help on newer iOS)
+        if ('wakeLock' in navigator) {
+            try {
+                wakeLock = await navigator.wakeLock.request('screen');
+                console.log('Wake Lock API also active (as secondary)');
+            } catch (err) {
+                console.log('Wake Lock API unavailable on iOS:', err.message);
+            }
+        }
+        
+        return noSleepSuccess;
+    }
+    
+    // For non-iOS browsers, use the standard Wake Lock API
     if (!('wakeLock' in navigator)) {
         console.warn('Wake Lock API is not supported in this browser.');
-        console.warn('Safari requires version 16.4+ (iOS 16.4+). Check Settings > General > About for your iOS version.');
-        return false;
+        // Try video-based NoSleep as fallback
+        return await enableNoSleep();
     }
     
     console.log('Wake Lock API is supported, requesting screen wake lock...');
-    console.log('Browser:', navigator.userAgent);
     
     try {
-        // Request a screen wake lock
         wakeLock = await navigator.wakeLock.request('screen');
         console.log('Wake Lock is active');
+        updateWakeLockIndicator('active');
         
-        // Log when the wake lock is released
         wakeLock.addEventListener('release', () => {
             console.log('Wake Lock was released (may happen when tab goes to background)');
+            updateWakeLockIndicator('inactive');
         });
         
-        // Check the current state
         console.log('Wake Lock state:', wakeLock.released ? 'released' : 'active');
         
-        // Register visibility change handler only once
         if (!wakeLockVisibilityListenerAdded) {
             wakeLockVisibilityListenerAdded = true;
             document.addEventListener('visibilitychange', handleVisibilityChangeForWakeLock);
@@ -1164,14 +1315,9 @@ async function requestWakeLock() {
         return true;
     } catch (err) {
         console.error('Error requesting wake lock:', err.name, err.message);
-        // Provide Safari-specific debugging info
-        if (err.name === 'NotAllowedError') {
-            console.warn('NotAllowedError: This may occur if:');
-            console.warn('  - The page is not visible/focused');
-            console.warn('  - Low Power Mode is enabled on iOS');
-            console.warn('  - The browser tab is in the background');
-        }
-        return false;
+        // Fall back to video-based approach
+        console.log('Falling back to video-based NoSleep');
+        return await enableNoSleep();
     }
 }
 
@@ -1180,6 +1326,11 @@ async function handleVisibilityChangeForWakeLock() {
     console.log('Visibility changed:', document.visibilityState);
     
     if (document.visibilityState === 'visible') {
+        // Re-enable NoSleep on iOS
+        if (isIOS()) {
+            await enableNoSleep();
+        }
+        
         // Check if wake lock needs reacquisition (null or released)
         if (wakeLock === null || wakeLock.released) {
             try {
@@ -1187,7 +1338,6 @@ async function handleVisibilityChangeForWakeLock() {
                 wakeLock = await navigator.wakeLock.request('screen');
                 console.log('Wake Lock reacquired successfully');
                 
-                // Re-add release listener for the new lock
                 wakeLock.addEventListener('release', () => {
                     console.log('Wake Lock was released (may happen when tab goes to background)');
                 });

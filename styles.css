@@ -1229,3 +1229,43 @@ h1 {
     display: inline-block;
     text-align: center;
 }
+
+/* Wake Lock Status Indicator */
+.wake-lock-indicator {
+    position: fixed;
+    bottom: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: var(--button-bg);
+    border: 1px solid var(--button-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.4;
+    transition: opacity 0.3s ease, color 0.3s ease, background-color 0.3s ease;
+    color: var(--text-color);
+    cursor: help;
+    z-index: 100;
+}
+
+.wake-lock-indicator:hover {
+    opacity: 0.8;
+}
+
+.wake-lock-indicator.active {
+    opacity: 0.6;
+    color: #28a745;
+    background-color: rgba(40, 167, 69, 0.1);
+    border-color: rgba(40, 167, 69, 0.3);
+}
+
+.wake-lock-indicator.active:hover {
+    opacity: 1;
+}
+
+.wake-lock-indicator.pending {
+    opacity: 0.5;
+    color: #ffc107;
+}
