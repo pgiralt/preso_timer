@@ -1128,7 +1128,6 @@ function setupEventListeners() {
 let wakeLockVisibilityListenerAdded = false;
 // NoSleep state
 let noSleepEnabled = false;
-let noSleepVideo = null;
 
 // Update the wake lock indicator UI
 function updateWakeLockIndicator(status) {
@@ -1144,7 +1143,7 @@ function updateWakeLockIndicator(status) {
             break;
         case 'pending':
             indicator.classList.add('pending');
-            indicator.title = 'Tap screen to enable wake lock';
+            indicator.title = 'Tap HERE to enable wake lock';
             break;
         default:
             indicator.title = 'Screen wake lock inactive';
@@ -1157,70 +1156,85 @@ function isIOS() {
            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 }
 
-// Minimal MP4 base64 (from NoSleep.js - known to work on iOS Safari)
-// This is a tiny valid MP4 video that iOS will play
-const NOSLEEP_MP4 = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAu1tZGF0AAACrQYF//+p3EXpvebZSLeWLNgg2SPu73gyNjQgLSBjb3JlIDE1NSByMjkwMSA3ZDBmZjIyIC0gSC4yNjQvTVBFRy00IEFWQyBjb2RlYyAtIENvcHlsZWZ0IDIwMDMtMjAxOCAtIGh0dHA6Ly93d3cudmlkZW9sYW4ub3JnL3gyNjQuaHRtbCAtIG9wdGlvbnM6IGNhYmFjPTEgcmVmPTMgZGVibG9jaz0xOjA6MCBhbmFseXNlPTB4MzoweDExMyBtZT1oZXggc3VibWU9NyBwc3k9MSBwc3lfcmQ9MS4wMDowLjAwIG1peGVkX3JlZj0xIG1lX3JhbmdlPTE2IGNocm9tYV9tZT0xIHRyZWxsaXM9MSA4eDhkY3Q9MSBjcW09MCBkZWFkem9uZT0yMSwxMSBmYXN0X3Bza2lwPTEgY2hyb21hX3FwX29mZnNldD0tMiB0aHJlYWRzPTEgbG9va2FoZWFkX3RocmVhZHM9MSBzbGljZWRfdGhyZWFkcz0wIG5yPTAgZGVjaW1hdGU9MSBpbnRlcmxhY2VkPTAgYmx1cmF5X2NvbXBhdD0wIGNvbnN0cmFpbmVkX2ludHJhPTAgYmZyYW1lcz0zIGJfcHlyYW1pZD0yIGJfYWRhcHQ9MSBiX2JpYXM9MCBkaXJlY3Q9MSB3ZWlnaHRiPTEgb3Blbl9nb3A9MCB3ZWlnaHRwPTIga2V5aW50PTI1MCBrZXlpbnRfbWluPTEgc2NlbmVjdXQ9NDAgaW50cmFfcmVmcmVzaD0wIHJjX2xvb2thaGVhZD00MCByYz1jcmYgbWJ0cmVlPTEgY3JmPTIzLjAgcWNvbXA9MC42MCBxcG1pbj0wIHFwbWF4PTY5IHFwc3RlcD00IGlwX3JhdGlvPTEuNDAgYXE9MToxLjAwAIAAAAFPZYiEABX//veBvzLIQEEZGOASQACBAJkALYFAACwzgAtQAFGAAABAAAADAAADAAADAAADAAADAAADAAADAPkAAAALQZokbEO//qmWADNwAAADABhMAAYXAAAACkGeQniEfwAAAwBxAAAACgGeYXRCfwAAAwBhAAAACgGeY2pCfwAAAwB4AAAAC0GaaEmoQWiZTAh3//6plgAzcAAAAwAYTAAGFwAAAApBnoZFESxzPwAAA4AAAAoB nqdqQn8AAAMAX0AAAA0BnqlqQn8AAAMAX0AAAA1BmqxJqEFomUwId//+qZYAM3AAAAMAGEwABhcAAAAKQZ7KRRUscz8AAAOBAAAACgGe6WpCfwAAA18AAAAMQZ7sSeEKUmUwId/+qZYAM3AAAAMAGEwABhcAAAAKQZ8KRRUscz8AAAOBAAAANWWIQAX//7zgb8yyEBBGRjgEkAAgQCZAC2BQAAsM4ALUABRgAAAQAAADAAADAAADAAADAP5moov0AAAAlG1vb3YAAABsbXZoZAAAAAAAAAAAAAAAAAAAA+gAAAPoAAEAAAEAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAGYdHJhawAAAFx0a2hkAAAAAwAAAAAAAAAAAAAAAQAAAAAAAAPoAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAACgAAAAoAAAAAAAJGVkdHMAAAAcZWxzdAAAAAAAAAABAAAD6AAAAAAAAQAAAAABEGhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABWaWRlb0hhbmRsZXIAAAAA22luZmZFmcAIBk//+94G/MshAQRkY4BJAAIEAmQAtgUAALDOAC1AAUYA';
+// NoSleep implementation using multiple strategies
+let noSleepAudioContext = null;
+let noSleepOscillator = null;
+let noSleepGain = null;
 
-// Create and setup the NoSleep video element
-function createNoSleepVideo() {
-    if (noSleepVideo) return noSleepVideo;
+// Create and setup the NoSleep using Web Audio API (more reliable on iOS)
+function createNoSleepAudio() {
+    if (noSleepAudioContext) return noSleepAudioContext;
     
-    noSleepVideo = document.createElement('video');
-    noSleepVideo.setAttribute('playsinline', '');
-    noSleepVideo.setAttribute('webkit-playsinline', '');
-    noSleepVideo.setAttribute('muted', '');
-    noSleepVideo.setAttribute('loop', '');
-    noSleepVideo.setAttribute('title', 'NoSleep');
-    noSleepVideo.style.position = 'absolute';
-    noSleepVideo.style.left = '-9999px';
-    noSleepVideo.style.top = '-9999px';  
-    noSleepVideo.style.width = '1px';
-    noSleepVideo.style.height = '1px';
-    noSleepVideo.muted = true;
-    noSleepVideo.src = NOSLEEP_MP4;
-    
-    // Handle video ending (re-play for continuous effect)
-    noSleepVideo.addEventListener('ended', () => {
-        console.log('NoSleep video ended, restarting...');
-        noSleepVideo.play().catch(e => console.log('NoSleep restart failed:', e));
-    });
-    
-    // Handle timeupdate to ensure loop works even if loop attr fails
-    noSleepVideo.addEventListener('timeupdate', () => {
-        if (noSleepVideo.currentTime > 0.5) {
-            noSleepVideo.currentTime = 0;
-        }
-    });
-    
-    document.body.appendChild(noSleepVideo);
-    console.log('NoSleep video element created');
-    
-    return noSleepVideo;
+    try {
+        // Create audio context
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        noSleepAudioContext = new AudioContext();
+        
+        // Create a silent oscillator
+        noSleepOscillator = noSleepAudioContext.createOscillator();
+        noSleepOscillator.frequency.value = 0; // Silent
+        
+        // Create gain node and set to silent
+        noSleepGain = noSleepAudioContext.createGain();
+        noSleepGain.gain.value = 0; // Completely silent
+        
+        // Connect: oscillator -> gain -> destination
+        noSleepOscillator.connect(noSleepGain);
+        noSleepGain.connect(noSleepAudioContext.destination);
+        
+        console.log('NoSleep audio context created');
+        return noSleepAudioContext;
+    } catch (e) {
+        console.error('Failed to create audio context:', e);
+        return null;
+    }
 }
 
-// Enable NoSleep using video playback
+// Enable NoSleep using Web Audio API
 async function enableNoSleep() {
     if (noSleepEnabled) {
         console.log('NoSleep already enabled');
         return true;
     }
     
-    console.log('Enabling NoSleep...');
-    const video = createNoSleepVideo();
+    console.log('Enabling NoSleep using Web Audio API...');
     
     try {
-        // The play() method returns a promise
-        const playPromise = video.play();
-        if (playPromise !== undefined) {
-            await playPromise;
+        const audioCtx = createNoSleepAudio();
+        
+        if (!audioCtx) {
+            console.error('Could not create audio context');
+            updateWakeLockIndicator('pending');
+            return false;
         }
-        noSleepEnabled = true;
-        console.log('NoSleep enabled - video playing');
-        updateWakeLockIndicator('active');
-        return true;
+        
+        // Resume audio context (required after user interaction on iOS)
+        if (audioCtx.state === 'suspended') {
+            console.log('Audio context suspended, resuming...');
+            await audioCtx.resume();
+        }
+        
+        // Start the oscillator if not already started
+        if (noSleepOscillator && !noSleepOscillator._started) {
+            noSleepOscillator.start(0);
+            noSleepOscillator._started = true;
+            console.log('NoSleep oscillator started');
+        }
+        
+        // Check if audio context is running
+        if (audioCtx.state === 'running') {
+            noSleepEnabled = true;
+            console.log('NoSleep enabled - audio context running');
+            updateWakeLockIndicator('active');
+            return true;
+        } else {
+            console.log('Audio context state:', audioCtx.state);
+            updateWakeLockIndicator('pending');
+            return false;
+        }
     } catch (err) {
         console.error('NoSleep enable failed:', err.name, err.message);
-        console.log('NoSleep requires user interaction on iOS - will retry on touch/click');
+        console.log('Full error:', err);
         updateWakeLockIndicator('pending');
         return false;
     }
@@ -1228,9 +1242,8 @@ async function enableNoSleep() {
 
 // Disable NoSleep
 function disableNoSleep() {
-    if (noSleepVideo) {
-        noSleepVideo.pause();
-        noSleepVideo.currentTime = 0;
+    if (noSleepAudioContext && noSleepAudioContext.state === 'running') {
+        noSleepAudioContext.suspend();
     }
     noSleepEnabled = false;
     updateWakeLockIndicator('inactive');
@@ -1315,8 +1328,8 @@ async function requestWakeLock() {
         return true;
     } catch (err) {
         console.error('Error requesting wake lock:', err.name, err.message);
-        // Fall back to video-based approach
-        console.log('Falling back to video-based NoSleep');
+        // Fall back to audio-based approach
+        console.log('Falling back to audio-based NoSleep');
         return await enableNoSleep();
     }
 }
@@ -1435,6 +1448,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (themeToggle) {
         themeToggle.addEventListener('click', toggleTheme);
     }
+    
+    // Set up wake lock indicator click handler (allows manual activation)
+    const wakeLockIndicator = document.getElementById('wake-lock-indicator');
+    if (wakeLockIndicator) {
+        wakeLockIndicator.addEventListener('click', async () => {
+            console.log('Wake lock indicator clicked - attempting to enable NoSleep...');
+            const success = await enableNoSleep();
+            console.log('NoSleep enable result:', success);
+            if (success) {
+                console.log('NoSleep activated via indicator click');
+            } else {
+                console.log('NoSleep still not active after indicator click');
+                // Show audio context state for debugging
+                if (noSleepAudioContext) {
+                    console.log('Audio context state:', noSleepAudioContext.state);
+                }
+            }
+        });
+        wakeLockIndicator.style.cursor = 'pointer';
+    }
+    
     try {
         // Try to load YAML from localStorage first
         const savedYAML = loadYAMLFromStorage();

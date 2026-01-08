@@ -1266,6 +1266,12 @@ h1 {
 }
 
 .wake-lock-indicator.pending {
-    opacity: 0.5;
+    opacity: 0.7;
     color: #ffc107;
+    animation: pulse-pending 2s ease-in-out infinite;
+}
+
+@keyframes pulse-pending {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 0.9; transform: scale(1.1); }
 }
