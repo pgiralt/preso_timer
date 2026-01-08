@@ -1124,17 +1124,22 @@ function setupEventListeners() {
     }
 }
 
+// Track if visibility listener is registered (to avoid duplicates)
+let wakeLockVisibilityListenerAdded = false;
+
 // Request wake lock to prevent screen from turning off
 async function requestWakeLock() {
     console.log('Attempting to request wake lock...');
     
     // Check if Wake Lock API is supported
     if (!('wakeLock' in navigator)) {
-        console.warn('Wake Lock API is not supported in this browser');
-        return;
+        console.warn('Wake Lock API is not supported in this browser.');
+        console.warn('Safari requires version 16.4+ (iOS 16.4+). Check Settings > General > About for your iOS version.');
+        return false;
     }
     
     console.log('Wake Lock API is supported, requesting screen wake lock...');
+    console.log('Browser:', navigator.userAgent);
     
     try {
         // Request a screen wake lock
@@ -1143,28 +1148,55 @@ async function requestWakeLock() {
         
         // Log when the wake lock is released
         wakeLock.addEventListener('release', () => {
-            console.log('Wake Lock was released');
+            console.log('Wake Lock was released (may happen when tab goes to background)');
         });
         
         // Check the current state
         console.log('Wake Lock state:', wakeLock.released ? 'released' : 'active');
         
-        // Reacquire wake lock when the page becomes visible again
-        document.addEventListener('visibilitychange', async () => {
-            console.log('Visibility changed:', document.visibilityState);
-            
-            if (document.visibilityState === 'visible' && wakeLock !== null) {
-                try {
-                    console.log('Reacquiring wake lock...');
-                    wakeLock = await navigator.wakeLock.request('screen');
-                    console.log('Wake Lock reacquired after page visibility change');
-                } catch (err) {
-                    console.error('Error reacquiring wake lock:', err);
-                }
-            }
-        });
+        // Register visibility change handler only once
+        if (!wakeLockVisibilityListenerAdded) {
+            wakeLockVisibilityListenerAdded = true;
+            document.addEventListener('visibilitychange', handleVisibilityChangeForWakeLock);
+            console.log('Visibility change listener registered for wake lock reacquisition');
+        }
+        
+        return true;
     } catch (err) {
-        console.error('Error requesting wake lock:', err);
+        console.error('Error requesting wake lock:', err.name, err.message);
+        // Provide Safari-specific debugging info
+        if (err.name === 'NotAllowedError') {
+            console.warn('NotAllowedError: This may occur if:');
+            console.warn('  - The page is not visible/focused');
+            console.warn('  - Low Power Mode is enabled on iOS');
+            console.warn('  - The browser tab is in the background');
+        }
+        return false;
+    }
+}
+
+// Separate handler for visibility changes (to avoid duplicate listeners)
+async function handleVisibilityChangeForWakeLock() {
+    console.log('Visibility changed:', document.visibilityState);
+    
+    if (document.visibilityState === 'visible') {
+        // Check if wake lock needs reacquisition (null or released)
+        if (wakeLock === null || wakeLock.released) {
+            try {
+                console.log('Reacquiring wake lock after visibility change...');
+                wakeLock = await navigator.wakeLock.request('screen');
+                console.log('Wake Lock reacquired successfully');
+                
+                // Re-add release listener for the new lock
+                wakeLock.addEventListener('release', () => {
+                    console.log('Wake Lock was released (may happen when tab goes to background)');
+                });
+            } catch (err) {
+                console.error('Error reacquiring wake lock:', err.name, err.message);
+            }
+        } else {
+            console.log('Wake lock still active, no reacquisition needed');
+        }
     }
 }
 
