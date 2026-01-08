@@ -1011,6 +1011,19 @@ function loadYAMLFromStorage() {
 }
 
 /**
+ * Checks if settings have been loaded (YAML exists in localStorage)
+ * @returns {boolean} - True if settings are loaded
+ */
+function hasSettingsLoaded() {
+    try {
+        return localStorage.getItem(STORAGE_KEY) !== null;
+    } catch (error) {
+        console.warn('Failed to check localStorage:', error);
+        return false;
+    }
+}
+
+/**
  * Clears the saved YAML from localStorage
  */
 function clearYAMLFromStorage() {
@@ -1019,6 +1032,64 @@ function clearYAMLFromStorage() {
         console.log('Successfully cleared YAML from localStorage');
     } catch (error) {
         console.warn('Failed to clear YAML from localStorage:', error);
+    }
+}
+
+/**
+ * Updates the import/reset button text and state based on whether settings are loaded
+ */
+function updateImportButtonState() {
+    const buttons = document.querySelectorAll('#import-button');
+    const hasSettings = hasSettingsLoaded();
+    
+    buttons.forEach(button => {
+        if (hasSettings) {
+            button.textContent = 'Reset Settings';
+            button.classList.add('reset-mode');
+        } else {
+            button.textContent = 'Import Settings';
+            button.classList.remove('reset-mode');
+        }
+    });
+}
+
+/**
+ * Resets settings to initial state by clearing YAML and reloading default data
+ */
+async function resetSettings() {
+    try {
+        // Clear the saved YAML
+        clearYAMLFromStorage();
+        
+        // Reset presentation data to empty state
+        presentationData = {
+            title: 'Presentation Timer',
+            start_time: formatTime(new Date()),
+            sections: []
+        };
+        
+        // Update the title
+        const titleElement = document.getElementById('title');
+        if (titleElement) {
+            titleElement.textContent = presentationData.title;
+        }
+        
+        // Update the start time input
+        const startTimeInputs = document.querySelectorAll('#start-time-input');
+        startTimeInputs.forEach(input => {
+            input.value = presentationData.start_time;
+        });
+        
+        // Update the button state
+        updateImportButtonState();
+        
+        // Update display
+        updateDisplay();
+        
+        console.log('Settings reset successfully');
+    } catch (error) {
+        console.error('Error resetting settings:', error);
+        alert('Error resetting settings: ' + error.message);
     }
 }
 
@@ -1056,6 +1127,9 @@ function importYAMLFile(file) {
             // Recalculate times and update display
             recalculateTimesFromStart(presentationData.start_time);
             updateDisplay();
+            
+            // Update the button state to show "Reset Settings"
+            updateImportButtonState();
             
             console.log('Successfully imported YAML file:', file.name);
         } catch (error) {
@@ -1102,13 +1176,22 @@ function setupEventListeners() {
         });
     }
     
-    // Setup import button
+    // Setup import/reset button
     if (importButton) {
         importButton.addEventListener('click', () => {
-            if (fileInput) {
-                fileInput.click();
+            if (hasSettingsLoaded()) {
+                // Settings are loaded, so reset them
+                resetSettings();
+            } else {
+                // No settings, trigger file import
+                if (fileInput) {
+                    fileInput.click();
+                }
             }
         });
+        
+        // Set initial button state
+        updateImportButtonState();
     }
     
     // Setup file input change handler
@@ -1838,13 +1921,26 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Re-attach event listeners to cloned elements
     function reattachEventListeners() {
-        // Import button
+        // Import/Reset button
         const importButton = popupMenu.querySelector('#import-button');
         const fileInput = popupMenu.querySelector('#yaml-file-input');
         if (importButton && fileInput) {
             importButton.addEventListener('click', () => {
-                fileInput.click();
+                if (typeof hasSettingsLoaded === 'function' && hasSettingsLoaded()) {
+                    // Settings are loaded, so reset them
+                    if (typeof resetSettings === 'function') {
+                        resetSettings();
+                    }
+                } else {
+                    // No settings, trigger file import
+                    fileInput.click();
+                }
             });
+            
+            // Update button state
+            if (typeof updateImportButtonState === 'function') {
+                updateImportButtonState();
+            }
         }
         
         // Now button
