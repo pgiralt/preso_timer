@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Presentation Timer</title>
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <!-- Mobile Menu Button - Only visible on small screens -->
+    <div class="menu-button" id="menu-toggle">
+        <div class="menu-icon">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+    
+    <!-- Popup Menu Container -->
+    <div class="popup-menu" id="popup-menu">
+        <!-- Popup menu content will be dynamically loaded -->
+    </div>
+    
+    <div class="container">
+        
+        <div class="header">
+            <!-- Section 1: Title -->
+            <div class="header-section">
+                <h1 id="title">Presentation Timer</h1>
+            </div>
+            
+            <!-- Section 2: Import Button -->
+            <div class="header-section">
+                <div class="header-controls">
+                    <input type="file" id="yaml-file-input" accept=".yaml,.yml" style="display: none;">
+                    <button id="import-button">Import Settings</button>
+                </div>
+            </div>
+            
+            <!-- Section 3: Start Time Control -->
+            <div class="header-section">
+                <div class="start-time-container">
+                    <label for="start-time-input">Start Time:</label>
+                    <input type="time" id="start-time-input" step="1">
+                    <button id="now-button">Now</button>
+                </div>
+            </div>
+            
+            <!-- Section 4: Theme Toggle -->
+            <div class="header-section">
+                <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                    <span class="theme-text">Dark</span>
+                </button>
+            </div>
+            
+            <!-- Section 5: Current Time -->
+            <div class="header-section current-time-section">
+                <div class="current-time-container">
+                    <div id="current-time">00:00:00</div>
+                </div>
+            </div>
+        </div>
+        <div class="current-info-container">
+            <div class="current-section-display">
+                <div class="section-info-display">
+                    <div id="current-section-name"></div>
+                    <div id="current-section-duration"></div>
+                </div>
+                <div id="time-remaining"></div>
+                <div class="time-adjustment-buttons">
+                    <button id="time-minus">-</button>
+                    <button id="time-plus">+</button>
+                </div>
+            </div>
+        </div>
+        <div class="next-section-display">
+            <span class="next-section-label">Next:</span>
+            <span class="next-section-name" id="next-section"></span>
+        </div>
+        
+        <div class="timeline-container">
+            <div id="timeline"></div>
+        </div>
+        <div id="presentation-timeline"></div>
+    </div>
+    
+    <!-- Wake Lock Status Indicator -->
+    <div id="wake-lock-indicator" class="wake-lock-indicator" title="Screen wake lock inactive">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+        </svg>
+    </div>
+    
+    <script>
+    (function() {
+        var s = document.createElement('script');
+        s.src = 'script.js?t=' + Date.now();
+        document.body.appendChild(s);
+    })();
+    </script>
+</body>
+</html>

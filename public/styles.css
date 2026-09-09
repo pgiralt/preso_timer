@@ -1,0 +1,1277 @@
+:root {
+    --bg-color: #f5f5f5;
+    --container-bg: white;
+    --text-color: #333;
+    --header-bg: #f8f9fa;
+    --header-border: #dee2e6;
+    --section-bg: white;
+    --section-border: #e9ecef;
+    --section-hover: #f8f9fa;
+    --current-section-bg: #e9ecef;
+    --current-time-bg: #f8f9fa;
+    --current-time-border: #dee2e6;
+    --button-bg: #f8f9fa;
+    --button-border: #dee2e6;
+    --button-hover: #e2e6ea;
+    --button-text: #212529;
+    --timeline-connector: #dee2e6;
+    --timeline-dot: #6c757d;
+    --timeline-dot-border: #f8f9fa;
+    
+    /* Alert and status colors */
+    --success-bg: rgba(40, 167, 69, 0.15);
+    --success-color: #155724;
+    --success-border: rgba(40, 167, 69, 0.3);
+    
+    --warning-bg: rgba(255, 193, 7, 0.15);
+    --warning-color: #856404;
+    --warning-border: rgba(255, 193, 7, 0.3);
+    
+    --danger-bg: rgba(220, 53, 69, 0.15);
+    --danger-color: #721c24;
+    --danger-border: rgba(220, 53, 69, 0.3);
+    
+    --info-bg: rgba(23, 162, 184, 0.15);
+    --info-color: #0c5460;
+    --info-border: rgba(23, 162, 184, 0.3);
+}
+
+[data-theme="dark"] {
+    --bg-color: #1a1a1a;
+    --container-bg: #2d2d2d;
+    --text-color: #e0e0e0;
+    --header-bg: #333333;
+    --header-border: #444;
+    --section-bg: #3a3a3a;
+    --section-border: #444;
+    --section-hover: #444;
+    --current-section-bg: #4a4a4a;
+    --current-time-bg: #333333;
+    --current-time-border: #444;
+    --button-bg: #444;
+    --button-border: #555;
+    --button-hover: #555;
+    --button-text: #f8f9fa;
+    --timeline-connector: #555;
+    --timeline-dot: #888;
+    --timeline-dot-border: #2d2d2d;
+    
+    /* Dark mode alert and status colors */
+    --success-bg: rgba(72, 180, 97, 0.2);
+    --success-color: #75b798;
+    --success-border: rgba(72, 180, 97, 0.3);
+    
+    --warning-bg: rgba(255, 193, 7, 0.2);
+    --warning-color: #ffd351;
+    --warning-border: rgba(255, 193, 7, 0.3);
+    
+    --danger-bg: rgba(220, 53, 69, 0.2);
+    --danger-color: #ea868f;
+    --danger-border: rgba(220, 53, 69, 0.3);
+    
+    --info-bg: rgba(23, 162, 184, 0.2);
+    --info-color: #6edff6;
+    --info-border: rgba(23, 162, 184, 0.3);
+}
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    height: 100vh;
+    overflow: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.container {
+    margin: 0 auto;
+    background-color: var(--container-bg);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background-color: var(--header-bg);
+    border-bottom: 1px solid var(--header-border);
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.header-section {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* Title section - takes available space */
+.header-section:first-child {
+    flex: 1;
+    min-width: 150px; /* Ensure title has minimum width */
+    justify-content: flex-start;
+}
+
+/* Middle sections (Start Time) */
+.header-section:nth-child(3) {
+    flex: 2;
+    min-width: 250px; /* Give more space to time controls */
+    justify-content: center;
+}
+
+/* Theme toggle and time sections */
+.header-section:nth-child(2),
+.header-section:last-child {
+    width: auto;
+    justify-content: flex-end;
+}
+
+#title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: left;
+    color: var(--text-color);
+}
+
+.header-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.start-time-container {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: nowrap;
+    width: 100%;
+    max-width: 100%;
+    padding: 0 10px;
+}
+
+.current-time-container {
+    text-align: right;
+    min-width: 80px; /* Ensure time has enough space */
+    padding: 0 5px;
+}
+
+#current-time {
+    font-weight: bold;
+    font-size: 16px;
+    white-space: nowrap;
+    color: var(--text-color);
+}
+
+.start-time-container {
+    flex: 1;
+    text-align: center;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.start-time-container label {
+    font-size: 14px;
+    color: #666;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+#start-time-input {
+    font-size: 16px;
+    padding: 8px 32px 8px 12px; /* Adjust padding to make room for icon */
+    border: 2px solid var(--button-border);
+    border-radius: 6px;
+    text-align: left; /* Align text to left to prevent overlap */
+    font-weight: bold;
+    color: var(--text-color);
+    background-color: var(--button-bg);
+    transition: all 0.2s ease;
+    width: 180px;
+    max-width: 100%;
+    box-sizing: border-box;
+    /* Style the clock icon */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236c757d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cpolyline points='12 6 12 12 16 14'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 16px;
+    /* Hide default clock icon */
+    -webkit-appearance: none;
+    -moz-appearance: textfield;
+}
+
+/* Dark mode specific styles for the time input */
+[data-theme="dark"] #start-time-input {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23adb5bd' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cpolyline points='12 6 12 12 16 14'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+#start-time-input:focus {
+    outline: none;
+    border-color: #2196F3;
+    background-color: var(--section-bg);
+}
+
+/* Hide the default calendar picker indicator */
+input[type="time"]::-webkit-calendar-picker-indicator {
+    display: none;
+}
+
+/* Firefox */
+input[type="time"]::-moz-calendar-picker-indicator {
+    display: none;
+}
+
+/* Hide the clear button in Edge */
+input[type="time"]::-ms-clear {
+    display: none;
+}
+
+.current-time-container {
+    flex: 1;
+    text-align: right;
+}
+
+#current-time {
+    font-size: 24px;
+    font-weight: bold;
+    color: inherit;
+}
+
+.timeline-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 20px 20px 20px;
+    margin-bottom: 0;
+}
+
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.section-name {
+    font-weight: bold;
+    color: #333;
+    flex: 2;
+    text-align: left;
+    font-size: 27px;
+}
+
+.time-range {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.timeline-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    margin-bottom: 5px;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+    gap: 15px;
+    border: 2px solid transparent;
+}
+
+.timeline-item:hover {
+    background-color: var(--section-hover);
+}
+
+.timeline-item.current-section {
+    background-color: var(--current-section-bg);
+    border-left: 4px solid #0d6efd;
+    padding-left: 8px;
+    position: relative;
+    z-index: 1;
+}
+
+/* Add a subtle shadow to make the current section stand out */
+.timeline-item.current-section::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    box-shadow: 0 0 10px rgba(13, 110, 253, 0.3);
+    border-radius: 4px;
+    z-index: -1;
+}
+
+.duration-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex: 1;
+}
+
+.duration-input {
+    width: 75px;
+    padding: 6px 10px;
+    border: 1px solid var(--button-border);
+    border-radius: 3px;
+    font-size: 27px;
+    text-align: center;
+    background-color: var(--button-bg);
+    color: var(--text-color);
+    transition: border-color 0.2s, background-color 0.2s;
+}
+
+.duration-input:focus {
+    outline: none;
+    border-color: #2196F3;
+    background-color: var(--section-bg);
+}
+
+.duration-input:hover {
+    border-color: #bbb;
+}
+
+.duration-label {
+    font-size: 27px;
+    color: #666;
+    font-weight: normal;
+}
+
+.time-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 30px;
+    min-width: 180px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid transparent;
+}
+
+.time-box.green,
+.alert-success,
+.alert-time-ok {
+    background-color: var(--success-bg);
+    color: var(--success-color);
+    border-color: var(--success-border);
+}
+
+.time-box.yellow,
+.alert-warning,
+.alert-time-warning {
+    background-color: var(--warning-bg);
+    color: var(--warning-color);
+    border-color: var(--warning-border);
+}
+
+.time-box.red,
+.alert-danger {
+    background-color: var(--danger-bg);
+    color: var(--danger-color);
+    border-color: var(--danger-border);
+}
+
+.time-box.upcoming,
+.alert-info {
+    background-color: var(--info-bg);
+    color: var(--info-color);
+    border-color: var(--info-border);
+}
+
+.time-box.current {
+    background-color: var(--warning-bg);
+    color: var(--warning-color);
+    border-color: var(--warning-border);
+    box-shadow: 0 2px 6px rgba(255, 152, 0, 0.2);
+}
+
+.time-box.completed {
+    background-color: var(--success-bg);
+    color: var(--success-color);
+    border-color: var(--success-border);
+}
+
+/* Alert styles */
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--text-color);
+}
+
+.time-display-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.current-section-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.section-info-display {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex: 1;
+}
+
+#current-section-name {
+    font-size: clamp(28px, 3vw, 48px);
+    color: var(--text-color);
+    font-weight: bold;
+}
+
+#current-section-duration {
+    font-size: clamp(18px, 2vw, 28px);
+    color: var(--text-color);
+    opacity: 0.8;
+    margin-top: 2px;
+    font-style: italic;
+}
+
+#current-section-name.presentation-complete {
+    color: #f44336 !important; /* Red for presentation complete */
+}
+
+#current-section-name.time-until-start {
+    color: #2196F3 !important; /* Blue for time until start */
+}
+
+#time-remaining, #time-remaining.portrait-mode {
+    font-size: clamp(96px, 15vw, 360px) !important; /* Restore !important for portrait mode */
+    font-weight: bold !important;
+    text-align: center;
+    padding: 8px 15px;
+    border-radius: 6px;
+    min-width: min(200px, 20vw);
+    background-color: var(--container-bg);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    flex-shrink: 0;
+    line-height: 1;
+    color: var(--text-color) !important;
+}
+
+#time-remaining.green {
+    color: #4CAF50 !important;
+    border: 3px solid #4CAF50;
+}
+
+#time-remaining.yellow {
+    color: #FF9800 !important;
+    border: 3px solid #FF9800;
+}
+
+#time-remaining.red {
+    color: #F44336 !important;
+    border: 3px solid #F44336;
+}
+
+#time-remaining.blue {
+    color: #2196F3 !important;
+    border: 3px solid #2196F3;
+}
+
+.time-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    margin: 0;
+    width: fit-content;
+}
+
+h1 {
+    color: var(--text-color) !important;
+    font-size: 1.5em;
+    margin: 0;
+}
+
+.time-adjustment-buttons {
+    display: flex;
+    gap: 12px;
+    flex: 1;
+    justify-content: flex-end;
+}
+
+.time-adjustment-buttons button {
+    padding: 12px 18px;
+    font-size: 20px;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    background: linear-gradient(145deg, #6c757d, #5a6268);
+    color: white;
+    min-width: 50px;
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.1),
+        0 2px 4px rgba(0, 0, 0, 0.06);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.time-adjustment-buttons button:hover {
+    background: linear-gradient(145deg, #5a6268, #495057);
+    box-shadow: 
+        0 6px 12px rgba(0, 0, 0, 0.15),
+        0 3px 6px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.time-adjustment-buttons button:active {
+    transform: translateY(0px) scale(0.98);
+    box-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.1),
+        0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.time-adjustment-buttons button:focus {
+    outline: none;
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.1),
+        0 2px 4px rgba(0, 0, 0, 0.06),
+        0 0 0 3px rgba(108, 117, 125, 0.3);
+}
+
+.presentation-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 8px;
+    margin-bottom: 2px;
+    border-radius: 4px;
+}
+
+.section-name {
+    flex: 1;
+    padding-right: 20px;
+    font-weight: bold;
+}
+
+.current-info-container {
+    margin-bottom: 20px;
+    padding: 20px;
+    background-color: var(--section-bg);
+    border-radius: 8px;
+    border: 2px solid var(--section-border);
+    margin: 0 20px 20px 20px;
+    position: sticky;
+    top: 80px;
+    z-index: 99;
+    color: var(--text-color);
+}
+
+.time-info {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+.time-adjustment-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.time-adjustment-buttons button {
+    padding: 10px 20px;
+    font-size: 18px;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background-color: #6c757d;
+    color: white;
+    min-width: 50px;
+    transition: background-color 0.2s ease;
+}
+
+.time-adjustment-buttons button:hover {
+    background-color: #5a6268;
+}
+
+.time-adjustment-buttons button:active {
+    transform: translateY(1px);
+    background-color: #495057;
+}
+
+.section-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+}
+
+.section-name {
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+#import-button, input[type="file"] + label {
+    padding: 8px 16px;
+    font-size: 16px;
+    font-weight: 600;
+    border: 2px solid var(--button-border);
+    border-radius: 4px;
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+#import-button:hover {
+    background-color: var(--button-hover);
+    border-color: var(--button-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#import-button:active {
+    background-color: #dee2e6;
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+#now-button {
+    padding: 8px 16px;
+    font-size: 16px;
+    font-weight: 600;
+    border: 2px solid var(--button-border);
+    border-radius: 4px;
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+#now-button:hover {
+    background-color: var(--button-hover);
+    border-color: var(--button-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#now-button:active {
+    background-color: #dee2e6;
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.timeline-connector {
+    position: absolute;
+    left: 50%;
+    width: 2px;
+    background-color: var(--timeline-connector);
+    height: 100%;
+    z-index: 0;
+}
+
+.timeline-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: var(--timeline-dot);
+    border: 2px solid var(--timeline-dot-border);
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+    margin-top: 4px;
+}
+
+.no-sections {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-color);
+    line-height: 1.6;
+    font-size: 1.2em;
+    background-color: var(--section-bg);
+    border: 2px dashed var(--section-border);
+    border-radius: 8px;
+    margin: 20px 0;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.no-sections p {
+    margin: 0.5rem 0;
+}
+
+.no-sections .download-link {
+    color: var(--info-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.no-sections .download-link:hover {
+    color: var(--info-color);
+    opacity: 0.8;
+    text-decoration: underline;
+}
+
+.no-sections:before {
+    content: '📋';
+    display: block;
+    font-size: 3em;
+    margin-bottom: 15px;
+}
+
+/* Menu button that appears in responsive mode */
+.menu-button {
+    position: fixed;
+    top: 0; /* Position at top of screen */
+    left: 0;
+    z-index: 1000;
+    width: 12px; /* Slightly wider */
+    height: 50px; /* Shorter height */
+    border-radius: 0 0 4px 0; /* Only round bottom-right corner */
+    background-color: var(--button-bg);
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    display: none; /* Hidden by default, shown in responsive mode */
+    border: 1px solid var(--button-border);
+    border-left: none; /* Remove left border for seamless edge attachment */
+    border-top: none; /* Remove top border for seamless attachment */
+    transition: background-color 0.3s ease;
+}
+
+.menu-button:hover {
+    background-color: var(--button-hover);
+}
+
+.menu-icon {
+    width: 6px;
+    height: 30px;
+    position: relative;
+    transform: rotate(0deg);
+    transition: .5s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.menu-icon span {
+    display: block;
+    height: 4px;
+    width: 4px;
+    background: var(--text-color);
+    border-radius: 50%;
+    opacity: 1;
+    transform: rotate(0deg);
+    transition: .25s ease-in-out;
+    position: static;
+}
+
+/* No need for absolute positioning with the new layout */
+.menu-icon span:nth-child(1) {
+    margin-top: 3px;
+}
+
+.menu-icon span:nth-child(2) {
+    margin: 2px 0;
+}
+
+.menu-icon span:nth-child(3) {
+    margin-bottom: 3px;
+}
+
+/* Animation when menu is open - dots move closer together */
+.menu-button.open .menu-icon span:nth-child(1) {
+    transform: scale(1.2);
+    background-color: var(--button-hover);
+}
+
+.menu-button.open .menu-icon span:nth-child(2) {
+    transform: scale(1.2);
+    background-color: var(--button-hover);
+}
+
+.menu-button.open .menu-icon span:nth-child(3) {
+    transform: scale(1.2);
+    background-color: var(--button-hover);
+}
+
+/* Popup menu styling */
+.popup-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 999;
+    background-color: var(--container-bg);
+    border-radius: 0 0 8px 0;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    padding-left: 20px;
+    width: auto;
+    min-width: 250px;
+    max-width: 80%;
+    display: none; /* Hidden by default */
+    flex-direction: column;
+    gap: 15px;
+    border: 1px solid var(--section-border);
+    border-left: none; /* Remove left border for seamless edge attachment */
+    border-top: none; /* Remove top border for seamless edge attachment */
+}
+
+.popup-menu.open {
+    display: flex;
+}
+
+/* Popup menu row layout */
+.popup-menu-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+/* General popup menu section styling */
+.popup-menu .header-section {
+    width: auto;
+    margin: 0;
+}
+
+/* Import section - left aligned */
+.popup-import-section {
+    justify-content: flex-start !important;
+    margin-right: auto;
+}
+
+/* Theme section - right aligned */
+.popup-theme-section {
+    justify-content: flex-end !important;
+    margin-left: auto;
+}
+
+/* Start time section - full width and centered */
+.popup-starttime-section {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 5px 0;
+}
+
+.popup-starttime-section .start-time-container {
+    width: 100%;
+    justify-content: center;
+}
+
+/* Next section display for landscape mode */
+.next-section-display {
+    display: none; /* Hidden by default */
+    background-color: var(--section-bg);
+    padding: 10px 15px;
+    margin: 10px 0;
+    border-radius: 6px;
+    border-left: 4px solid var(--timeline-dot);
+    font-size: 18px;
+}
+
+.next-section-display .next-section-label {
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+.next-section-display .next-section-name {
+    color: var(--text-color);
+}
+
+/* Responsive layout for small screens and mobile landscape */
+@media (max-width: 900px), (max-height: 600px) and (orientation: landscape) {
+    /* CSS for all responsive modes */
+
+        /* Show menu button in responsive mode */
+    .menu-button {
+        display: flex;
+    }
+    
+        /* Hide header in responsive mode and remove its space */
+    .header {
+        display: none;
+        height: 0;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        visibility: hidden;
+        position: absolute;
+    }
+    
+    /* Adjust container to account for removed header */
+    .container {
+        padding-top: 0;
+    }
+    
+    /* Adjust current-info-container to go to the top */
+    .current-info-container {
+        margin: 0;
+        padding: 25px 15px 15px;
+        top: 0;
+        border: none;
+        border-radius: 0;
+        background-color: var(--container-bg);
+    }
+    
+    .current-section-display {
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .section-info-display {
+        text-align: center;
+        margin-bottom: 10px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    #current-section-name {
+        text-align: center;
+        width: 100%;
+        justify-content: center;
+        display: flex;
+    }
+    
+    #current-section-duration {
+        display: none; /* Hide the duration display on small screens */
+    }
+
+    /* Stronger selector to override JavaScript styling */
+    html body .container .current-info-container #time-remaining,
+    #time-remaining.narrow-screen,
+    #time-remaining.portrait-mode.narrow-screen {
+        font-size: clamp(120px, 20vw, 400px) !important;
+        margin: 10px 0 !important;
+        padding: 8px 5px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        line-height: 0.85 !important;
+        max-height: none !important;
+    }
+    
+    /* Hide time adjustment buttons at same breakpoint */
+    .time-adjustment-buttons {
+        display: none;
+    }
+    
+    /* Timeline modifications for small screens */
+    .timeline-item {
+        padding: 6px 10px;
+        margin-bottom: 3px;
+    }
+    
+    /* Hide time box and duration input on narrow screens */
+    .timeline-item .time-box,
+    .timeline-item .duration-container {
+        display: none;
+    }
+    
+    /* Make section name take full width */
+    .timeline-item .section-name {
+        flex: 1;
+        font-size: 18px;
+        padding-right: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    /* Simplify timeline items */
+    .timeline-item {
+        border-left: 3px solid var(--timeline-dot);
+        padding-left: 10px;
+        gap: 8px;
+    }
+}
+
+/* Next section display for landscape mode */
+.next-section-display {
+    display: none; /* Hidden by default */
+    background-color: var(--section-bg);
+    padding: 12px 15px;
+    margin: 15px 20px;
+    border-radius: 6px;
+    border-left: 4px solid var(--timeline-dot);
+    font-size: 18px;
+    line-height: 1.4;
+}
+
+.next-section-display .next-section-label {
+    font-weight: bold;
+    color: var(--text-color);
+    margin-right: 5px;
+}
+
+.next-section-display .next-section-name {
+    color: var(--text-color);
+}
+
+/* Specific rules for landscape orientation on mobile */
+@media (max-height: 600px) and (orientation: landscape) {
+    /* Full page layout with flexbox */
+    body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        max-height: 100vh;
+        overflow: hidden;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        max-height: 100vh;
+        justify-content: space-between;
+        padding: 0;
+        margin: 0;
+    }
+    
+    /* Hide timeline container in landscape mode */
+    .timeline-container, 
+    #presentation-timeline {
+        display: none;
+    }
+    
+    /* Adjust current info container to take minimal space */
+    .current-info-container {
+        padding: 10px 15px 5px;
+        margin: 0;
+        flex: 0 0 auto;
+    }
+    
+    /* Make section info more compact */
+    .section-info-display {
+        margin-bottom: 0;
+    }
+    
+    #current-section-name {
+        font-size: clamp(36px, 6vh, 56px);
+        margin-bottom: 0;
+    }
+    
+    /* Create a spacer element to push content to top and bottom */
+    .current-section-display {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Landscape mode layout - fully fixed approach */
+    .container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        max-height: 100vh;
+        padding: 0;
+    }
+
+    .current-info-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: auto;
+    }
+    
+    /* Ensure section-info-display stays small with appropriate spacing */
+    .section-info-display {
+        flex: 0 0 auto;
+        margin: 0;
+        padding-bottom: 5px; /* 5px of space below section info */
+    }
+    
+    /* Make current-section-display take all available space with tighter spacing */
+    .current-section-display {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start; /* Change to flex-start to reduce space */
+        width: 100%;
+        height: 100%;
+        flex: 1;
+        gap: 0; /* Remove any gap between elements */
+    }
+    
+    /* Timer with dynamic sizing via JavaScript */
+    #time-remaining {
+        /* In landscape, font size is ONLY controlled by JavaScript */
+        font-size: initial; /* Remove default without !important, let JS take over completely */
+        margin: 0;
+        margin-top: 0; /* Remove negative margin to maintain spacing */
+        padding: 0;
+        line-height: 0.85;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+        box-shadow: none;
+        background: transparent;
+        text-overflow: ellipsis;
+        border-width: 5px !important; /* Thicker border in landscape mode */
+        text-align: center;
+        width: 100%;
+    }
+    
+    /* Position next section display at the very bottom */
+    .next-section-display {
+        display: block;
+        margin: 0;
+        padding: 10px 15px;
+        border-radius: 0;
+        border: none;
+        border-top: 1px solid var(--section-border);
+        width: 100%;
+        box-sizing: border-box;
+        background-color: var(--container-bg);
+        flex: 0 0 auto;
+        position: sticky;
+        bottom: 0;
+    }
+    
+    /* Landscape mode color-specific styles with thicker borders */
+    #time-remaining.green {
+        border-width: 10px !important;
+    }
+    
+    #time-remaining.yellow {
+        border-width: 10px !important;
+    }
+    
+    #time-remaining.red {
+        border-width: 10px !important;
+    }
+    
+    #time-remaining.blue {
+        border-width: 10px !important;
+    }
+}
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+    background-color: var(--button-bg);
+    border: 2px solid var(--button-border);
+    border-radius: 6px;
+    color: var(--button-text);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 6px 12px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 70px;
+    height: 36px;
+}
+
+.theme-toggle-btn:hover {
+    background-color: var(--button-hover);
+    border-color: var(--button-hover);
+}
+
+.theme-text {
+    display: inline-block;
+    text-align: center;
+}
+
+/* Wake Lock Status Indicator */
+.wake-lock-indicator {
+    position: fixed;
+    bottom: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: var(--button-bg);
+    border: 1px solid var(--button-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.4;
+    transition: opacity 0.3s ease, color 0.3s ease, background-color 0.3s ease;
+    color: var(--text-color);
+    cursor: help;
+    z-index: 100;
+}
+
+.wake-lock-indicator:hover {
+    opacity: 0.8;
+}
+
+.wake-lock-indicator.active {
+    opacity: 0.6;
+    color: #28a745;
+    background-color: rgba(40, 167, 69, 0.1);
+    border-color: rgba(40, 167, 69, 0.3);
+}
+
+.wake-lock-indicator.active:hover {
+    opacity: 1;
+}
+
+.wake-lock-indicator.pending {
+    opacity: 0.7;
+    color: #ffc107;
+    animation: pulse-pending 2s ease-in-out infinite;
+}
+
+@keyframes pulse-pending {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 0.9; transform: scale(1.1); }
+}

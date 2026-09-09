@@ -1,0 +1,23 @@
+title: "TECCOL-2191"
+start_time: "18:18:00"
+sections:
+  - name: Introduction
+    duration: 10
+  - name: User Management
+    duration: 45
+  - name: Endpoints Part 1
+    duration: 35
+  - name: Break
+    duration: 15
+  - name: Endpoints Part 2
+    duration: 15
+  - name: Call Routing
+    duration: 20
+  - name: PSTN Calling
+    duration: 25
+  - name: E2E Case Study
+    duration: 20
+  - name: Media Quality
+    duration: 45
+  - name: Conclusion
+    duration: 30
