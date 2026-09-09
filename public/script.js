@@ -18,6 +18,14 @@ let wakeLock = null;
 // Key for storing presentation data in localStorage
 const STORAGE_KEY = 'presentationTimerConfig';
 
+function onDocumentReady(callback) {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', callback, { once: true });
+    } else {
+        callback();
+    }
+}
+
 /**
  * Parses a time string in HH:MM:SS format to a Date object
  * Handles day rollover when times cross midnight
@@ -1522,7 +1530,7 @@ function initializeTheme() {
 }
 
 // Initialize when the page loads
-document.addEventListener('DOMContentLoaded', async () => {
+onDocumentReady(async () => {
     // Initialize theme
     initializeTheme();
     
@@ -1663,7 +1671,7 @@ function isLandscapeSmallScreen() {
  * Preserves original behavior in portrait/desktop mode
  * Updated to ensure text fits within div boundaries
  */
-document.addEventListener('DOMContentLoaded', function() {
+onDocumentReady(function() {
     const timer = document.getElementById('time-remaining');
     if (!timer) return;
 
@@ -1869,7 +1877,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 // Menu handling for responsive design
-document.addEventListener('DOMContentLoaded', function() {
+onDocumentReady(function() {
     const menuToggle = document.getElementById('menu-toggle');
     const popupMenu = document.getElementById('popup-menu');
     const header = document.querySelector('.header');
